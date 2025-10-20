@@ -1,23 +1,25 @@
-package org.agora.backend
+package backend
 
+import backend.infrastructure.outbound.persistence.Databases
+import backend.infrastructure.plugins.configureSecurity
+import backend.infrastructure.plugins.configureSerialization
+import backend.infrastructure.plugins.configureErrorHandling
+import backend.infrastructure.inbound.http.routes.configureRouting
 import io.ktor.server.application.*
-import io.ktor.server.netty.EngineMain
-import org.agora.backend.infrastructure.out.persistance.configureDatabases
-import org.agora.backend.infrastructure.plugins.configureFrameworks
-import org.agora.backend.infrastructure.plugins.configureMonitoring
-import org.agora.backend.infrastructure.`in`.http.routes.configureRouting
-import org.agora.backend.infrastructure.plugins.configureSecurity
-import org.agora.backend.infrastructure.plugins.configureSerialization
+import io.ktor.server.netty.*
 
-fun main(args: Array<String>) {
-    EngineMain.main(args)
-}
+fun main(args: Array<String>) = EngineMain.main(args)
 
+@Suppress("unused")
 fun Application.module() {
-    configureFrameworks()
-    configureMonitoring()
+    // 1) DB + migraciones
+    Databases.init(environment)
+
+    // 2) Plugins Ktor
     configureSerialization()
-    configureDatabases()
     configureSecurity()
+    configureErrorHandling()
+
+    // 3) Rutas
     configureRouting()
 }
