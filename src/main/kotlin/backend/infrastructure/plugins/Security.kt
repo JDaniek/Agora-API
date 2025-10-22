@@ -1,59 +1,31 @@
-package backend.infrastructure.plugins
+package backend.plugins
 
-import com.auth0.jwt.JWT
-import com.auth0.jwt.algorithms.Algorithm
+import backend.infrastructure.security.JwtConfig
+import backend.infrastructure.security.JwtService
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.auth.jwt.*
-
-data class JwtConfig(
-    val issuer: String,
-    val audience: String,
-    val realm: String,
-    val secret: String,
-    val expiresInMinutes: Long
-)
-
-lateinit var jwtConfig: JwtConfig
-lateinit var jwtAlgorithm: Algorithm
+import org.koin.ktor.ext.inject // <-- Importa el inyector de Koin
 
 fun Application.configureSecurity() {
-    val cfg = environment.config
-    jwtConfig = JwtConfig(
-        issuer = cfg.property("security.jwt.issuer").getString(),
-        audience = cfg.property("security.jwt.audience").getString(),
-        realm = cfg.property("security.jwt.realm").getString(),
-        secret = cfg.property("security.jwt.secret").getString(),
-        expiresInMinutes = cfg.property("security.jwt.expiresInMinutes").getString().toLong()
-    )
-    jwtAlgorithm = Algorithm.HMAC256(jwtConfig.secret)
+    // Inyecta los servicios que Koin ya creó en 'configureDependencyInjection'
+    val jwtService by inject<JwtService>()
+    val cfg by inject<JwtConfig>()
 
     install(Authentication) {
         jwt("auth-jwt") {
-            realm = jwtConfig.realm
-            verifier(
-                JWT
-                    .require(jwtAlgorithm)
-                    .withIssuer(jwtConfig.issuer)
-                    .withAudience(jwtConfig.audience)
-                    .build()
-            )
-            validate { cred ->
-                if (cred.payload.getClaim("uid").asLong() != null) JWTPrincipal(cred.payload) else null
+            realm = cfg.realm
+            verifier(jwtService.verifier()) // <-- Ahora esto funciona
+            validate { credential ->
+                // Leemos el ID desde el campo 'subject' (sub) del token
+                val userId = credential.payload.subject?.toLongOrNull()
+
+                if (userId != null) {
+                    JWTPrincipal(credential.payload)
+                } else {
+                    null // Token inválido si no tiene subject
+                }
             }
         }
     }
-}
-
-fun issueToken(userId: Long, roleName: String): String {
-    val now = System.currentTimeMillis()
-    val exp = now + jwtConfig.expiresInMinutes * 60_000
-    return JWT.create()
-        .withIssuer(jwtConfig.issuer)
-        .withAudience(jwtConfig.audience)
-        .withClaim("uid", userId)
-        .withClaim("role", roleName)
-        .withIssuedAt(java.util.Date(now))
-        .withExpiresAt(java.util.Date(exp))
-        .sign(jwtAlgorithm)
 }

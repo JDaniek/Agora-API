@@ -1,13 +1,11 @@
-package org.agora.backend.domain.models
+package backend.domain.model
 
-import java.time.Instant
+import backend.domain.model.UserAccount // ⬅️ asegura este import
 
-data class Review (
-    val id: Long,
-    val studentId: UserAccount,
-    val teacherId: UserAccount,
+data class Review(
+    val id: Int,
+    val reviewer: UserAccount, // si así lo modelaste
+    val reviewee: UserAccount,
     val rating: Int,
-    val review: String,
-    val createdAt: Instant,
-    val updatedAt: Instant
+    val comment: String?
 )

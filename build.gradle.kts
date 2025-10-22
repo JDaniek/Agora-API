@@ -1,26 +1,25 @@
 plugins {
-    alias(libs.plugins.kotlin.jvm)
-    alias(libs.plugins.ktor)
-    alias(libs.plugins.kotlin.plugin.serialization)
+    id("org.jetbrains.kotlin.jvm") version "2.0.21"
+    id("org.jetbrains.kotlin.plugin.serialization") version "2.0.21"
+    id("io.ktor.plugin") version "3.0.2"
 }
 
-group = "org.agora"
-version = "0.0.1"
-
-application {
-    mainClass = "io.ktor.server.netty.EngineMain"
+kotlin {
+    jvmToolchain(21)
+    sourceSets.all {
+        languageSettings.languageVersion = "2.0"
+        languageSettings.apiVersion = "2.0"
+    }
+    application {
+        mainClass.set("backend.ApplicationKt")
+    }
 }
 
 dependencies {
-    implementation(libs.flyway.core)
-    implementation(libs.flyway.database.postgresql) // ← NECESARIO con Flyway 10+
-    // DI (opcional)
+    // Koin
     implementation(libs.koin.ktor)
     implementation(libs.koin.logger.slf4j)
 
-
-    implementation(libs.ktor.server.status.pages)
-    implementation(libs.exposed.java.time)
     // Ktor
     implementation(libs.ktor.server.core)
     implementation(libs.ktor.server.netty)
@@ -28,25 +27,36 @@ dependencies {
     implementation(libs.ktor.server.content.negotiation)
     implementation(libs.ktor.server.auth)
     implementation(libs.ktor.server.auth.jwt)
-    implementation(libs.ktor.serialization.kotlinx.json)
+    implementation(libs.ktor.server.status.pages)
     implementation(libs.ktor.server.config.yaml)
+    implementation(libs.ktor.serialization.kotlinx.json)
 
-    // DB
-    implementation(libs.postgresql)
+    // Serialization
+    implementation(libs.kotlinx.serialization.json)
+
+    // Exposed
     implementation(libs.exposed.core)
     implementation(libs.exposed.jdbc)
-    implementation(libs.flyway.core)
+    implementation(libs.exposed.java.time)
 
-    // Crypto (passwords)
+    // Security
     implementation(libs.bcrypt)
+    implementation(libs.java.jwt)
 
-    // (Opcional) H2 solo para tests locales
-    implementation(libs.h2)
+    // Database
+    implementation(libs.postgresql)
+    implementation(libs.flyway.core)
+    implementation(libs.flyway.postgresql)
+
+    // Utils
+    implementation(libs.kotlinx.datetime)
 
     // Logging
-    implementation(libs.logback.classic)
+    runtimeOnly(libs.logback.classic)
+}
 
-    // Tests
-    testImplementation(libs.ktor.server.test.host)
-    testImplementation(libs.kotlin.test.junit)
+ktor {
+    fatJar {
+        archiveFileName.set("agora-api-all.jar")
+    }
 }

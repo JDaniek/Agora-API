@@ -1,40 +1,23 @@
-package backend.infrastructure.plugins
+package backend.plugins // (Asumo que está en 'plugins' por el package)
 
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.plugins.statuspages.*
 import io.ktor.server.response.*
-import kotlinx.serialization.Serializable
-
-@Serializable
-data class Problem(
-    val type: String = "about:blank",
-    val title: String,
-    val status: Int,
-    val detail: String? = null
-)
 
 fun Application.configureErrorHandling() {
     install(StatusPages) {
         exception<IllegalArgumentException> { call, cause ->
-            call.respond(
-                status = HttpStatusCode.BadRequest,
-                message = Problem(
-                    title = "Bad Request",
-                    status = HttpStatusCode.BadRequest.value,
-                    detail = cause.message
-                )
-            )
+            call.respond(HttpStatusCode.BadRequest, mapOf("error" to cause.message))
+        }
+        exception<SecurityException> { call, cause -> // <-- Añadido para el login
+            call.respond(HttpStatusCode.Unauthorized, mapOf("error" to cause.message))
+        }
+        exception<IllegalStateException> { call, cause ->
+            call.respond(HttpStatusCode.Forbidden, mapOf("error" to cause.message))
         }
         exception<Throwable> { call, cause ->
-            call.respond(
-                status = HttpStatusCode.InternalServerError,
-                message = Problem(
-                    title = "Internal Server Error",
-                    status = HttpStatusCode.InternalServerError.value,
-                    detail = cause.message
-                )
-            )
+            call.respond(HttpStatusCode.InternalServerError, mapOf("error" to (cause.message ?: "server error")))
         }
     }
 }

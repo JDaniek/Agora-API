@@ -1,19 +1,16 @@
-package backend.infrastructure.plugins
+package backend.plugins
 
+import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
 import io.ktor.server.plugins.contentnegotiation.*
-import io.ktor.serialization.kotlinx.json.*
 import kotlinx.serialization.json.Json
 
 fun Application.configureSerialization() {
     install(ContentNegotiation) {
-        json(
-            Json {
-                prettyPrint = false
-                isLenient = false
-                ignoreUnknownKeys = true
-                encodeDefaults = true
-            }
-        )
+        json(Json {
+            prettyPrint = true
+            isLenient = true
+            ignoreUnknownKeys = true // Muy útil
+        })
     }
 }

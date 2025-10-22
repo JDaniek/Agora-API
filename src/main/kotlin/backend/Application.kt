@@ -1,25 +1,21 @@
 package backend
 
-import backend.infrastructure.outbound.persistence.Databases
-import backend.infrastructure.plugins.configureSecurity
-import backend.infrastructure.plugins.configureSerialization
-import backend.infrastructure.plugins.configureErrorHandling
+// Añade estos imports:
 import backend.infrastructure.inbound.http.routes.configureRouting
+import backend.plugins.*
 import io.ktor.server.application.*
-import io.ktor.server.netty.*
 
-fun main(args: Array<String>) = EngineMain.main(args)
+fun main(args: Array<String>): Unit = io.ktor.server.netty.EngineMain.main(args)
 
-@Suppress("unused")
 fun Application.module() {
-    // 1) DB + migraciones
-    Databases.init(environment)
+    // 1. Koin primero
+    configureDependencyInjection()
 
-    // 2) Plugins Ktor
-    configureSerialization()
+    // 2. El resto de plugins
     configureSecurity()
+    configureSerialization() // <-- Ahora se resuelve
+    configureMonitoring()    // <-- Ahora se resuelve
+    configureDatabases()     // <-- Ahora se resuelve
+    configureRouting()       // <-- Ahora se resuelve
     configureErrorHandling()
-
-    // 3) Rutas
-    configureRouting()
 }
