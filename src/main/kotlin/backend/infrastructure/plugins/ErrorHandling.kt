@@ -1,4 +1,4 @@
-package backend.plugins // (Asumo que está en 'plugins' por el package)
+package backend.infrastructure.plugins // ✅
 
 import io.ktor.http.*
 import io.ktor.server.application.*

@@ -1,6 +1,8 @@
 package backend.infrastructure.inbound.http.routes
 
 import backend.infrastructure.inbound.http.handler.AuthHandler
+import backend.infrastructure.inbound.http.handler.MediaHandler
+import backend.infrastructure.inbound.http.handler.ProfileHandler
 // import backend.infrastructure.inbound.http.handler.ChatHandler  // <-- Comentado
 // import backend.infrastructure.inbound.http.handler.ClassHandler // <-- Comentado
 import io.ktor.server.application.*
@@ -24,7 +26,8 @@ fun Route.authRouting(handler: AuthHandler) {
 fun Application.configureRouting() {
     // Inyecta los handlers desde Koin
     val authHandler by inject<AuthHandler>()
-
+    val profileHandler by inject<ProfileHandler>()
+    val mediaHandler by inject<MediaHandler>()
     // TODO: Descomenta esto cuando implementes ClassHandler
     // val classHandler by inject<ClassHandler>() // <-- Comentado
 
@@ -41,7 +44,9 @@ fun Application.configureRouting() {
             // Registra las rutas de autenticación
             authRouting(authHandler)
 
-            // TODO: Descomenta tus otras rutas
+            profileRouting(profileHandler)
+
+            mediaRouting(mediaHandler)
             // classRouting(classHandler)
             // chatRouting(chatHandler)
         }

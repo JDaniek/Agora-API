@@ -4,6 +4,7 @@ plugins {
     id("io.ktor.plugin") version "3.0.2"
 }
 
+
 kotlin {
     jvmToolchain(21)
     sourceSets.all {
@@ -16,6 +17,12 @@ kotlin {
 }
 
 dependencies {
+    // Cloudinary (Ahora sí lo encontrará)
+// Cloudinary (Ahora sí lo encontrará)
+    implementation(libs.cloudinary.http44)
+    // Dependencia para CORS
+    implementation(libs.ktor.server.cors)
+
     // Koin
     implementation(libs.koin.ktor)
     implementation(libs.koin.logger.slf4j)

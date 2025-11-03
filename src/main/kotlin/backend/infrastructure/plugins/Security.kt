@@ -1,4 +1,4 @@
-package backend.plugins
+package backend.infrastructure.plugins // ✅
 
 import backend.infrastructure.security.JwtConfig
 import backend.infrastructure.security.JwtService

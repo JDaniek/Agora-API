@@ -1,4 +1,4 @@
-package org.agora.backend.domain.models
+package backend.domain.model
 
 data class NotificationType(
     val id: Long,

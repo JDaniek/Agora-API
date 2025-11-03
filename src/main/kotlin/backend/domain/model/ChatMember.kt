@@ -1,4 +1,4 @@
-package org.agora.backend.domain.models
+package backend.domain.model
 
 data class ChatMember(
     val chatId: Long,

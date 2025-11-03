@@ -1,65 +1,121 @@
-package backend.plugins
+// DependencyInjection.kt
+package backend.infrastructure.plugins
 
+// --- Imports de Cloudinary ---
+import backend.domain.port.outbound.StorageService
+import backend.infrastructure.outbound.storage.CloudinaryStorageService
+import backend.infrastructure.inbound.http.handler.MediaHandler
+import com.cloudinary.Cloudinary
+
+// --- Imports de Casos de Uso ---
+import backend.application.usecase.users.GetProfileQueryImpl
 import backend.application.usecase.users.LoginUseCaseImpl
 import backend.application.usecase.users.RegisterUserUseCaseImpl
+import backend.application.usecase.users.UpdateProfileUseCaseImpl
+
+// --- Imports de Dominio ---
+import backend.domain.port.inbound.GetProfileQuery
 import backend.domain.port.inbound.LoginUseCase
 import backend.domain.port.inbound.RegisterUserUseCase
+import backend.domain.port.inbound.UpdateProfileUseCase
 import backend.domain.port.outbound.PasswordService
+import backend.domain.port.outbound.ProfileRepository
+import backend.domain.port.outbound.SpecialtyRepository
 import backend.domain.port.outbound.UserRepository
+
+// --- Imports de Infraestructura ---
 import backend.infrastructure.inbound.http.handler.AuthHandler
+import backend.infrastructure.inbound.http.handler.ProfileHandler
+import backend.infrastructure.outbound.persistence.repository.ProfileRepositoryPg
+import backend.infrastructure.outbound.persistence.repository.SpecialtyRepositoryPg
 import backend.infrastructure.outbound.persistence.repository.UserRepositoryPg
 import backend.infrastructure.security.JwtConfig
 import backend.infrastructure.security.JwtService
 import backend.infrastructure.security.PasswordServiceImpl
+
+// --- Imports de Ktor y Koin ---
 import io.ktor.server.application.*
+import io.ktor.server.config.*
 import org.koin.dsl.module
 import org.koin.ktor.plugin.Koin
 import org.koin.logger.slf4jLogger
 
-// Módulo para la configuración cargada desde el environment
+// Helpers de lectura
+private fun ApplicationConfig.prop(path: String) =
+    propertyOrNull(path)?.getString()
+private fun sys(name: String) =
+    System.getProperty(name) ?: System.getenv(name)
+
+// --- Módulos de Koin ---
+
 val configModule = module {
+    // expone la config de Ktor a Koin
+    single<ApplicationConfig> { get<Application>().environment.config }
+
+    // JWT (Configuración robusta)
     single {
-        JwtConfig(
-            secret = get<Application>().environment.config.property("jwt.secret").getString(),
-            issuer = get<Application>().environment.config.property("jwt.issuer").getString(),
-            audience = get<Application>().environment.config.property("jwt.audience").getString(),
-            realm = get<Application>().environment.config.property("jwt.realm").getString(),
-            expirationMinutes = get<Application>().environment.config.property("jwt.expirationMinutes").getString().toLong()
-        )
+        val cfg = get<ApplicationConfig>()
+        val secret = cfg.prop("security.jwt.secret") ?: sys("JWT_SECRET")
+        ?: error("Falta security.jwt.secret o env/system JWT_SECRET")
+        val issuer = cfg.prop("security.jwt.issuer") ?: "agora.auth"
+        val audience = cfg.prop("security.jwt.audience") ?: "agora.clients"
+        val realm = cfg.prop("security.jwt.realm") ?: "Access to Agora API"
+        val expMinutes = (cfg.prop("security.jwt.expiresInMinutes") ?: "60").toLong()
+        JwtConfig(secret, issuer, audience, realm, expMinutes)
+    }
+
+    // Cloudinary (Lógica de URL o 3 claves DENTRO del 'single')
+    single<Cloudinary> {
+        val cfg = get<ApplicationConfig>()
+        val cloudinaryUrl = sys("CLOUDINARY_URL") ?: cfg.prop("cloudinary.url")
+
+        if (cloudinaryUrl != null) {
+            Cloudinary(cloudinaryUrl) // Usar URL si existe
+        } else {
+            // Usar claves sueltas del application.yaml
+            val name = cfg.prop("cloudinary.cloud_name")
+                ?: sys("CLOUDINARY_CLOUD_NAME")
+                ?: error("Falta cloudinary.cloud_name o env CLOUDINARY_CLOUD_NAME")
+            val key = cfg.prop("cloudinary.api_key")
+                ?: sys("CLOUDINARY_API_KEY")
+                ?: error("Falta cloudinary.api_key o env CLOUDINARY_API_KEY")
+            val secret = cfg.prop("cloudinary.api_secret")
+                ?: sys("CLOUDINARY_API_SECRET")
+                ?: error("Falta cloudinary.api_secret o env CLOUDINARY_API_SECRET")
+
+            Cloudinary(mapOf(
+                "cloud_name" to name, "api_key" to key, "api_secret" to secret, "secure" to true
+            ))
+        }
     }
 }
 
-// Módulo para los adaptadores de infraestructura
 val infrastructureModule = module {
-    // Adaptadores de Salida (Outbound)
+
     single<UserRepository> { UserRepositoryPg() }
+    single<ProfileRepository> { ProfileRepositoryPg() }
+    single<SpecialtyRepository> { SpecialtyRepositoryPg() }
     single<PasswordService> { PasswordServiceImpl() }
-    single { JwtService(get()) } // Koin inyectará JwtConfig aquí
+    single { JwtService(get()) }
+    single<StorageService> { CloudinaryStorageService(get()) }
 }
 
-// Módulo para los casos de uso (Aplicación)
 val applicationModule = module {
     single<RegisterUserUseCase> { RegisterUserUseCaseImpl(get(), get()) }
     single<LoginUseCase> { LoginUseCaseImpl(get(), get(), get()) }
+    single<UpdateProfileUseCase> { UpdateProfileUseCaseImpl(get()) }
+    single<GetProfileQuery> { GetProfileQueryImpl(get(), get()) }
 }
 
-// Módulo para los adaptadores de entrada (Inbound)
 val inboundModule = module {
     single { AuthHandler(get(), get(), get()) }
-
-    // TODO: Descomenta esto cuando implementes ClassHandler
-    // single { ClassHandler(/* ...tus dependencias... */) }
-
-    // TODO: Descomenta esto cuando implementes ChatHandler
-    // single { ChatHandler(/* ...tus dependencias... */) }
+    single { ProfileHandler(get(), get()) }
+    single { MediaHandler(get(), get()) }// ahora pasa StorageService y ProfileRepository
 }
 
-
-// Función principal de configuración de Koin
 fun Application.configureDependencyInjection() {
     install(Koin) {
         slf4jLogger()
-        // Importante: Koin necesita acceso a 'Application' para leer la config
         modules(
             module { single { this@configureDependencyInjection } },
             configModule,

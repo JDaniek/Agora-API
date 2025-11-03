@@ -1,19 +1,24 @@
 ktor:
+  deployment:
+    port: 8080
   application:
     modules:
       - backend.ApplicationKt.module
-  deployment:
-    port: 8080
 
-# 'jwt' debe estar al nivel raíz, no dentro de 'security:'
-jwt:
-  secret: "super-secret-change-me-in-production"
-  issuer: "agora-api-issuer"
-  audience: "agora-api-audience"
-  realm: "AgoraAPI"
-  expirationMinutes: 60 # 1 hora
+security:
+  jwt:
+    issuer: "agora.auth"
+    audience: "agora.clients"
+    realm: "Access to Agora API"
+    secret: "super_secret_dev_key_change_me"
+    expiresInMinutes: 60
 
 db:
   url: "jdbc:postgresql://localhost:5432/agora_db"
   user: "postgres"
   password: "Jeselmorzu08"
+
+cloudinary:
+  cloud_name: "dsvsmbw86"
+  api_key: "822122624443347"
+  api_secret: "MFuwVULnO0_O7HgyTzRXpcJy5S8"

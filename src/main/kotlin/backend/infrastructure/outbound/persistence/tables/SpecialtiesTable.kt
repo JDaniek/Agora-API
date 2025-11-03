@@ -1,7 +1,6 @@
-package org.agora.backend.infrastructure.outbound.persistance.tables
+package backend.infrastructure.outbound.persistence.tables
 
 import org.jetbrains.exposed.sql.Table
-import backend.infrastructure.outbound.persistence.tables.UserAccountsTable
 
 object SpecialtiesTable : Table("specialty") {
     val id = integer("id").autoIncrement()
