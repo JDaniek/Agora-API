@@ -8,9 +8,9 @@ import backend.domain.model.Specialty
 // --- DTO para PUT (Para actualizar el perfil) ---
 @Serializable
 data class UpdateProfileRequest(
-    val description: String,
-    val photoUrl: String,
-    val city: String,
+    val description: String?,   // ← antes String
+    val photoUrl: String?,      // ← antes String
+    val city: String?,          // ← antes String
     val stateCode: String,
     val level: String,
     val specialtyIds: List<Long>

@@ -7,12 +7,13 @@ interface UpdateProfileUseCase {
     suspend fun execute(command: UpdateProfileCommand): Profile
 
     data class UpdateProfileCommand(
-        val userId: Long, // El ID del usuario (lo sacaremos del JWT)
-        val description: String,
-        val photoUrl: String,
-        val city: String,
+        val userId: Long,
+        val description: String?,   // ← antes String
+        val photoUrl: String?,      // ← antes String
+        val city: String?,          // ← antes String
         val stateCode: String,
         val level: String,
         val specialtyIds: List<Long>
     )
 }
+

@@ -14,8 +14,7 @@ import io.ktor.http.*
 
 // ¡¡CORRECCIÓN AQUÍ!! El constructor ahora recibe DOS casos de uso
 class ProfileHandler(
-    private val updateProfileUseCase: UpdateProfileUseCase,
-    private val getProfileQuery: GetProfileQuery
+    private val updateProfileUseCase: UpdateProfileUseCase, private val getProfileQuery: GetProfileQuery
 ) {
     /**
      * Manejador para PUT /api/v1/profile (Actualizar perfil)
@@ -24,8 +23,9 @@ class ProfileHandler(
     suspend fun handleUpdateProfile(call: ApplicationCall) {
         val request = call.receive<UpdateProfileRequest>()
         val principal = call.principal<JWTPrincipal>()
-        val userId = principal?.payload?.subject?.toLongOrNull()
-            ?: return call.respond(HttpStatusCode.Unauthorized, "Invalid token")
+        val userId = principal?.payload?.subject?.toLongOrNull() ?: return call.respond(
+            HttpStatusCode.Unauthorized, "Invalid token"
+        )
 
         val command = UpdateProfileUseCase.UpdateProfileCommand(
             userId = userId,
@@ -46,8 +46,9 @@ class ProfileHandler(
             val profileDetails = getProfileQuery.execute(userId)
 
             // 3. Si por alguna razón no lo encuentra (no debería pasar)
-            val profile = profileDetails.profile
-                ?: return call.respond(HttpStatusCode.NotFound, "Profile could not be found after update.")
+            val profile = profileDetails.profile ?: return call.respond(
+                HttpStatusCode.NotFound, "Profile could not be found after update."
+            )
 
             // 4. Responde con el DTO serializable (ProfileResponse)
             val responseDTO = profile.toResponseDTO(profileDetails.specialties)
@@ -64,21 +65,30 @@ class ProfileHandler(
      */
     suspend fun handleGetProfile(call: ApplicationCall) {
         val principal = call.principal<JWTPrincipal>()
-        val userId = principal?.payload?.subject?.toLongOrNull()
-            ?: return call.respond(HttpStatusCode.Unauthorized, "Invalid token")
+        val userId = principal?.payload?.subject?.toLongOrNull() ?: return call.respond(
+            HttpStatusCode.Unauthorized,
+            ApiError("UNAUTHORIZED", "Invalid token")
+        )
 
         try {
             val profileDetails = getProfileQuery.execute(userId)
-
             val profile = profileDetails.profile
-                ?: return call.respond(HttpStatusCode.NotFound, "Profile not created yet.")
+                ?: return call.respond(
+                    HttpStatusCode.NotFound,
+                    ApiError("PROFILE_NOT_FOUND", "Profile not created yet.")
+                )
 
             val responseDTO = profile.toResponseDTO(profileDetails.specialties)
             call.respond(HttpStatusCode.OK, responseDTO)
 
         } catch (e: Exception) {
-            call.respond(HttpStatusCode.InternalServerError, "Error getting profile: ${e.message}")
+            call.respond(
+                HttpStatusCode.InternalServerError, ApiError("PROFILE_UPDATE_ERROR", e.message ?: "Unexpected error")
+            )
         }
     }
+
+    @kotlinx.serialization.Serializable
+    data class ApiError(val code: String, val message: String)
 
 }
