@@ -1,6 +1,8 @@
 package backend.domain.port.outbound
 
+import backend.domain.model.AdviserCard // <-- 1. IMPORTAR
 import backend.domain.model.Profile
+import backend.domain.port.inbound.SearchAdvisersQuery // <-- 2. IMPORTAR
 
 interface ProfileRepository {
     /**
@@ -15,5 +17,11 @@ interface ProfileRepository {
     suspend fun findByUserId(userId: Long): Profile?
 
     suspend fun upsertPhoto(userId: Long, photoUrl: String): Profile
+
+    /**
+     * Busca perfiles de asesores (role_id=2) que coincidan
+     * con los filtros de búsqueda.
+     */
+    suspend fun searchAdvisers(command: SearchAdvisersQuery.SearchCommand): List<AdviserCard>
 
 }

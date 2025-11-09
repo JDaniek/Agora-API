@@ -1,6 +1,9 @@
 // DependencyInjection.kt
 package backend.infrastructure.plugins
-
+//Imports de  Adviser
+import backend.application.usecase.users.SearchAdvisersQueryImpl // <-- 1. IMPORTAR
+import backend.domain.port.inbound.SearchAdvisersQuery // <-- 2. IMPORTAR
+import backend.infrastructure.inbound.http.handler.AdviserHandler // <-- 3. IMPORTAR
 // --- Imports de Cloudinary ---
 import backend.domain.port.outbound.StorageService
 import backend.infrastructure.outbound.storage.CloudinaryStorageService
@@ -43,6 +46,7 @@ import org.koin.logger.slf4jLogger
 // Helpers de lectura
 private fun ApplicationConfig.prop(path: String) =
     propertyOrNull(path)?.getString()
+
 private fun sys(name: String) =
     System.getProperty(name) ?: System.getenv(name)
 
@@ -83,9 +87,11 @@ val configModule = module {
                 ?: sys("CLOUDINARY_API_SECRET")
                 ?: error("Falta cloudinary.api_secret o env CLOUDINARY_API_SECRET")
 
-            Cloudinary(mapOf(
-                "cloud_name" to name, "api_key" to key, "api_secret" to secret, "secure" to true
-            ))
+            Cloudinary(
+                mapOf(
+                    "cloud_name" to name, "api_key" to key, "api_secret" to secret, "secure" to true
+                )
+            )
         }
     }
 }
@@ -105,12 +111,14 @@ val applicationModule = module {
     single<LoginUseCase> { LoginUseCaseImpl(get(), get(), get()) }
     single<UpdateProfileUseCase> { UpdateProfileUseCaseImpl(get()) }
     single<GetProfileQuery> { GetProfileQueryImpl(get(), get()) }
+    single<SearchAdvisersQuery> { SearchAdvisersQueryImpl(get()) } // <-- 4. AÑADIR
 }
 
 val inboundModule = module {
     single { AuthHandler(get(), get(), get()) }
     single { ProfileHandler(get(), get()) }
     single { MediaHandler(get(), get()) }// ahora pasa StorageService y ProfileRepository
+    single { AdviserHandler(get()) } // <-- 5. AÑADIR
 }
 
 fun Application.configureDependencyInjection() {
@@ -125,3 +133,5 @@ fun Application.configureDependencyInjection() {
         )
     }
 }
+
+

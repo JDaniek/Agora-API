@@ -3,6 +3,7 @@ package backend.infrastructure.inbound.http.routes
 import backend.infrastructure.inbound.http.handler.AuthHandler
 import backend.infrastructure.inbound.http.handler.MediaHandler
 import backend.infrastructure.inbound.http.handler.ProfileHandler
+import backend.infrastructure.inbound.http.handler.AdviserHandler // <-- 1. IMPORTAR
 // import backend.infrastructure.inbound.http.handler.ChatHandler  // <-- Comentado
 // import backend.infrastructure.inbound.http.handler.ClassHandler // <-- Comentado
 import io.ktor.server.application.*
@@ -28,8 +29,7 @@ fun Application.configureRouting() {
     val authHandler by inject<AuthHandler>()
     val profileHandler by inject<ProfileHandler>()
     val mediaHandler by inject<MediaHandler>()
-    // TODO: Descomenta esto cuando implementes ClassHandler
-    // val classHandler by inject<ClassHandler>() // <-- Comentado
+    val adviserHandler by inject<AdviserHandler>() // <-- 2. INYECTAR
 
     // TODO: Descomenta esto cuando implementes ChatHandler
     // val chatHandler by inject<ChatHandler>() // <-- Comentado
@@ -47,6 +47,7 @@ fun Application.configureRouting() {
             profileRouting(profileHandler)
 
             mediaRouting(mediaHandler)
+            adviserRouting(adviserHandler) // <-- 3. AÑADIR NUEVAS RUTAS
             // classRouting(classHandler)
             // chatRouting(chatHandler)
         }

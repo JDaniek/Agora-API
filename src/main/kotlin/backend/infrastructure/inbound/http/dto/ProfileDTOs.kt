@@ -1,5 +1,6 @@
 package backend.infrastructure.inbound.http.dto
 
+import backend.domain.model.AdviserCard
 import backend.domain.model.Profile
 import kotlinx.serialization.Serializable
 import backend.domain.model.Specialty
@@ -34,6 +35,19 @@ data class ProfileResponse(
     val specialties: List<SpecialtyDTO> // Incluimos las especialidades
 )
 
+
+@Serializable
+data class AdviserCardResponse(
+    val userId: Long,
+    val firstName: String,
+    val lastName: String,
+    val photoUrl: String?,
+    val level: String?,
+    val description: String?,
+    val specialties: List<String>
+)
+
+
 // --- Mappers (Funciones para convertir Modelos a DTOs) ---
 
 fun Specialty.toDTO(): SpecialtyDTO = SpecialtyDTO(
@@ -49,4 +63,16 @@ fun Profile.toResponseDTO(specialties: List<Specialty>): ProfileResponse = Profi
     stateCode = this.stateCode,
     level = this.level,
     specialties = specialties.map { it.toDTO() } // Convertimos la lista
+)
+
+
+// --- 3. AÑADIR ESTA FUNCIÓN MAPPER ---
+fun AdviserCard.toDTO(): AdviserCardResponse = AdviserCardResponse(
+    userId = this.userId,
+    firstName = this.firstName,
+    lastName = this.lastName,
+    photoUrl = this.photoUrl,
+    level = this.level,
+    description = this.description,
+    specialties = this.specialties
 )

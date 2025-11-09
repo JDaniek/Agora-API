@@ -18,7 +18,8 @@ class MediaHandler(
     private val profileRepository: ProfileRepository  // 👈 NUEVO
 ) {
     // Tu método existente (solo subir) se queda igual:
-    suspend fun handleFileUpload(call: ApplicationCall) { /* ... */ }
+    suspend fun handleFileUpload(call: ApplicationCall) { /* ... */
+    }
 
     // NUEVO: sube y persiste en profiles.photo_url del usuario autenticado
     suspend fun handleUploadAndAttach(call: ApplicationCall) {
@@ -26,7 +27,7 @@ class MediaHandler(
             ?: return call.respond(HttpStatusCode.Unauthorized, "No autorizado")
 
         // Ajusta según tu claim real
-// 1) Primero intenta del subject (tu JwtService guarda ahí el userId)
+        // 1) Primero intenta del subject (tu JwtService guarda ahí el userId)
         val userIdLong = principal.payload.subject?.toLongOrNull()
         // 2) Si algún día decides meter "id" como claim, esto lo vuelve compatible
             ?: principal.payload.getClaim("id").asLong()
@@ -46,6 +47,7 @@ class MediaHandler(
                         fileBytes = out.toByteArray()
                     }
                 }
+
                 else -> {}
             }
             part.dispose()
