@@ -14,9 +14,15 @@ security:
     expiresInMinutes: 60
 
 db:
-  url: "jdbc:postgresql://localhost:5432/agora_db"
+  # --- ¡CAMBIO AQUÍ! ---
+  # Apunta a tu IP Elástica de AWS en lugar de 'localhost'
+  url: "jdbc:postgresql://34.192.122.244:5432/agora_db"
+
+  # (Este es el usuario 'postgres' de tu instancia EC2)
   user: "postgres"
-  password: "Jeselmorzu08"
+
+  # (Esta es la contraseña 'jeselmorzu08' que pusiste en el script)
+  password: "jeselmorzu08"
 
 cloudinary:
   cloud_name: "dsvsmbw86"

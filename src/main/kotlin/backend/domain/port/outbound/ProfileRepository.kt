@@ -1,5 +1,3 @@
-<<<<<<< HEAD
-=======
 package backend.domain.port.outbound
 
 import backend.domain.model.AdviserCard // <-- 1. IMPORTAR
@@ -27,4 +25,3 @@ interface ProfileRepository {
     suspend fun searchAdvisers(command: SearchAdvisersQuery.SearchCommand): List<AdviserCard>
 
 }
->>>>>>> develop
