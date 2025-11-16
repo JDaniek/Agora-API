@@ -46,12 +46,11 @@ class ProfileRepositoryPg : ProfileRepository {
     }
 
     // (Añadiendo la función upsertPhoto que tenías antes)
-    override suspend fun upsertPhoto(userId: Long, photoUrl: String): Profile = tx {
+    override suspend fun upsertPhoto(userId: Long, photoUrl: String): Unit = tx {
         ProfilesTable.upsert(ProfilesTable.userId) {
             it[ProfilesTable.userId] = userId
             it[ProfilesTable.photoUrl] = photoUrl
         }
-        findByUserId(userId)!! // Devuelve el perfil actualizado
     }
 
     override suspend fun saveOrUpdate(profile: Profile, specialtyIds: List<Long>): Profile = tx {
