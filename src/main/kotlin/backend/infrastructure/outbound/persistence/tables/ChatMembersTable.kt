@@ -1,8 +1,7 @@
-package org.agora.backend.infrastructure.outbound.persistance.tables
+package backend.infrastructure.outbound.persistence.tables
 
 import org.jetbrains.exposed.sql.ReferenceOption
 import org.jetbrains.exposed.sql.Table
-import backend.infrastructure.outbound.persistence.tables.UserAccountsTable
 
 object ChatMembersTable : Table("chat_members") {
     val chatId = long("chat_id").references(ChatsTable.id, onDelete = ReferenceOption.CASCADE)

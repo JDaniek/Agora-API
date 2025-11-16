@@ -1,0 +1,35 @@
+[33mcommit 24801e92988f81baecb0f956e61b4713878b9cfc[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m
+Author: Jesel8D <243692@ids.upchiapas.edu.mx>
+Date:   Sun Nov 9 03:18:54 2025 -0600
+
+    Agregacion de mensajes mas detallados para errores en peticiones
+
+[33mcommit 6f2a29333ad89b0846e8e628d85d47259504ad2e[m
+Author: Jesel8D <243692@ids.upchiapas.edu.mx>
+Date:   Sat Nov 8 19:29:49 2025 -0600
+
+    Implementacion de endpoint para Advisers (testeado), coreccion de alertas
+
+[33mcommit aca8d4f2b8451740cf0c0baa0e97b22fdb405b32[m
+Author: Jesel8D <243692@ids.upchiapas.edu.mx>
+Date:   Sun Nov 2 19:06:07 2025 -0600
+
+    Integracion de register, login, y completado de perfil con foto de perfil apoyado de Cloudinary
+
+[33mcommit 34ee7a2ca2eff5c8a7c56e1355a9c7338ed0b2a6[m
+Author: Jesel8D <243692@ids.upchiapas.edu.mx>
+Date:   Tue Oct 21 23:38:48 2025 -0600
+
+    API version 1.1 Register and Login
+
+[33mcommit 490e48b30da8513138b32946ac4b6b8af9a75fee[m
+Author: Jesel8D <243692@ids.upchiapas.edu.mx>
+Date:   Sun Oct 19 18:19:21 2025 -0600
+
+    Actualización completa del submódulo Agora-API
+
+[33mcommit e1f2a03603d78cb9ab0240eacd387b1a485e1717[m
+Author: CarlosEL0 <carloslopezochoa56@gmail.com>
+Date:   Sun Oct 12 20:44:10 2025 -0600
+
+    esqueleto base de Api hexagonal

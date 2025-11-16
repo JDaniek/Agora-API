@@ -1,8 +1,7 @@
-package org.agora.backend.infrastructure.outbound.persistance.tables
+package backend.infrastructure.outbound.persistence.tables
 
 import org.jetbrains.exposed.sql.ReferenceOption
 import org.jetbrains.exposed.sql.Table
-import backend.infrastructure.outbound.persistence.tables.UserAccountsTable
 
 object ClassEnrollmentsTable : Table("class_enrollments") {
     // NOTA: Estructura mejorada como se sugirió.

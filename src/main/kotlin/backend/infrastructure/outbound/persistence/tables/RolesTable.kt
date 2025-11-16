@@ -1,10 +1,11 @@
-package org.agora.backend.infrastructure.outbound.persistance.tables
+package backend.infrastructure.outbound.persistence.tables
 
 import org.jetbrains.exposed.sql.Table
-import backend.infrastructure.outbound.persistence.tables.UserAccountsTable
 
 object RolesTable : Table("roles") {
-    val id = integer("id").autoIncrement()
-    val name = text("name")
+    // CORRECCIÓN: Cambiado de integer() a long()
+    // para que coincida con la llave foránea en UserAccountsTable.
+    val id = long("id").autoIncrement()
+    val name = text("name").uniqueIndex() // Usamos esta versión que tiene el uniqueIndex
     override val primaryKey = PrimaryKey(id)
 }

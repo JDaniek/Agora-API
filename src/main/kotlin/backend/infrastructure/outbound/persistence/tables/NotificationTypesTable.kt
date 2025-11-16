@@ -1,5 +1,4 @@
-package org.agora.backend.infrastructure.outbound.persistance.tables
-import backend.infrastructure.outbound.persistence.tables.UserAccountsTable
+package backend.infrastructure.outbound.persistence.tables
 import org.jetbrains.exposed.sql.Table
 
 object NotificationTypesTable : Table("notification_type_id") {

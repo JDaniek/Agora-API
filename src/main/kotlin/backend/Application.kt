@@ -4,7 +4,7 @@ package backend
 import backend.infrastructure.inbound.http.routes.configureRouting
 import io.ktor.server.application.*
 import backend.infrastructure.plugins.*
-import configureDatabases
+import backend.infrastructure.plugins.configureDatabases // <-- ¡AÑADE ESTA LÍNEA!
 import configureMonitoring
 
 fun main(args: Array<String>): Unit = io.ktor.server.netty.EngineMain.main(args)
