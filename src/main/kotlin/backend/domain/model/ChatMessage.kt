@@ -3,10 +3,13 @@ package backend.domain.model
 import java.time.Instant
 
 data class ChatMessage (
-    val id: Long,
+    // --- CORREGIDO ---
+    val messageId: Long, // Cambiado de 'id'
+    // -----------------
     val chatId: Long,
     val senderId: Long,
-    val content: String,
+    // --- CORREGIDO ---
+    val body: String,    // Cambiado de 'content'
+    // -----------------
     val sentAt: Instant
-
 )

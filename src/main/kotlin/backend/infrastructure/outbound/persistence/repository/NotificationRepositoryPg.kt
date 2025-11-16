@@ -1,6 +1,7 @@
 package backend.infrastructure.outbound.persistence.repository
 
 import backend.domain.model.NotificationDetails
+import backend.domain.model.Notification // <-- ¡Importar!
 import backend.domain.port.outbound.NotificationRepository
 // (¡Ya no necesitamos 'backend.infrastructure.plugins.dbQuery'!)
 import backend.infrastructure.outbound.persistence.tables.NotificationsTable
@@ -46,7 +47,12 @@ class NotificationRepositoryPg : NotificationRepository {
     override suspend fun findNotificationsForUser(userId: Long): Result<List<NotificationDetails>> = runCatching {
         tx {
             NotificationsTable
-                .join(NotificationTypesTable, JoinType.INNER, NotificationsTable.notificationTypeId, NotificationTypesTable.id)
+                .join(
+                    NotificationTypesTable,
+                    JoinType.INNER,
+                    NotificationsTable.notificationTypeId,
+                    NotificationTypesTable.id
+                )
                 .join(Sender, JoinType.INNER, NotificationsTable.senderId, Sender[UserAccountsTable.id])
                 .join(SenderProfile, JoinType.LEFT, NotificationsTable.senderId, SenderProfile[ProfilesTable.userId])
                 .selectAll()
@@ -69,16 +75,48 @@ class NotificationRepositoryPg : NotificationRepository {
     /**
      * Actualiza el estado de una notificación (UPDATE)
      */
-    override suspend fun updateStatus(notificationId: Long, newStatus: String, recipientId: Long): Result<Boolean> = runCatching {
-        tx {
-            val updatedRows = NotificationsTable.update(
-                where = {
-                    (NotificationsTable.id eq notificationId) and (NotificationsTable.recipientId eq recipientId)
+    override suspend fun updateStatus(notificationId: Long, newStatus: String, recipientId: Long): Result<Boolean> =
+        runCatching {
+            tx {
+                val updatedRows = NotificationsTable.update(
+                    where = {
+                        (NotificationsTable.id eq notificationId) and (NotificationsTable.recipientId eq recipientId)
+                    }
+                ) {
+                    it[this.status] = newStatus
                 }
-            ) {
-                it[this.status] = newStatus
+                updatedRows > 0
             }
-            updatedRows > 0
+        }
+
+    /**
+     * (NUEVA IMPLEMENTACIÓN)
+     * Mapea una fila de la BD al modelo de dominio 'Notification'.
+     */
+    private fun ResultRow.toNotification(): Notification = Notification(
+        id = this[NotificationsTable.id],
+        recipientId = this[NotificationsTable.recipientId],
+        senderId = this[NotificationsTable.senderId],
+        notificationTypeId = this[NotificationsTable.notificationTypeId],
+        status = this[NotificationsTable.status],
+        createdAt = this[NotificationsTable.createdAt].toInstant(),
+        message = this[NotificationsTable.message],
+        chatId = this[NotificationsTable.chatId]
+    )
+
+    /**
+     * (NUEVA IMPLEMENTACIÓN)
+     * Busca una notificación por su ID.
+     */
+    override suspend fun findById(notificationId: Long): Result<Notification?> = runCatching {
+        tx {
+            NotificationsTable
+                .selectAll()
+                .where { NotificationsTable.id eq notificationId }
+                .firstOrNull()
+                ?.toNotification()
         }
     }
+
+
 }

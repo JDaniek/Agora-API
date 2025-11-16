@@ -1,5 +1,5 @@
 package backend.domain.port.outbound
-
+import backend.domain.model.Notification // <-- ¡Importar el modelo de dominio!
 import backend.domain.model.NotificationDetails
 
 /**
@@ -46,4 +46,14 @@ interface NotificationRepository {
      * @return El objeto [Notification] completo o null si no se encuentra.
      */
     // suspend fun findById(notificationId: Long): Result<Notification?>
+
+    /**
+     * (NUEVO MÉTODO)
+     * Busca una notificación por su ID.
+     * La necesitamos para obtener el senderId y recipientId antes de crear un chat.
+     */
+    suspend fun findById(notificationId: Long): Result<Notification?>
+
+
+
 }
