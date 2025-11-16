@@ -16,7 +16,7 @@ interface ProfileRepository {
      */
     suspend fun findByUserId(userId: Long): Profile?
 
-    suspend fun upsertPhoto(userId: Long, photoUrl: String): Profile
+    suspend fun upsertPhoto(userId: Long, photoUrl: String): Unit
 
     /**
      * Busca perfiles de asesores (role_id=2) que coincidan
