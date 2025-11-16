@@ -3,21 +3,18 @@ package backend.infrastructure.inbound.http.routes
 import backend.infrastructure.inbound.http.handler.ProfileHandler
 import io.ktor.server.routing.*
 import io.ktor.server.auth.*
+import io.ktor.server.application.* // <-- Import 'call' (implícito en 'get'/'put')
 
 // Rutas específicas para Perfil
 fun Route.profileRouting(handler: ProfileHandler) {
-    // ¡¡IMPORTANTE: Protegemos todas las rutas de /profile!!
-    authenticate("auth-jwt") { // <--- Nombre de tu configuración de JWT
+    authenticate("auth-jwt") {
         route("/profile") {
-            // PUT /api/v1/profile
             put {
                 handler.handleUpdateProfile(call)
             }
-
-            // GET /api/v1/profile
             get {
-               handler.handleGetProfile(call)
-             }
+                handler.handleGetProfile(call)
+            }
         }
     }
 }
