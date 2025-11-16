@@ -37,6 +37,8 @@ dependencies {
     implementation(libs.ktor.server.status.pages)
     implementation(libs.ktor.server.config.yaml)
     implementation(libs.ktor.serialization.kotlinx.json)
+    implementation("io.ktor:ktor-server-websockets:3.0.2")
+
 
     // Serialization
     implementation(libs.kotlinx.serialization.json)
