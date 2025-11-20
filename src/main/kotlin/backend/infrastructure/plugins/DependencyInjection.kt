@@ -46,10 +46,13 @@ import backend.application.usecase.users.SearchAdvisersQueryImpl
 // 2. Notificaciones
 import backend.domain.port.inbound.GetNotificationsQuery
 import backend.domain.port.inbound.RequestContactUseCase
+import backend.domain.port.inbound.RejectContactRequestUseCase   // <--- NUEVO
 import backend.domain.port.inbound.AcceptContactRequestUseCase
 import backend.application.usecase.notifications.GetNotificationsQueryImpl
 import backend.application.usecase.notifications.RequestContactUseCaseImpl
 import backend.application.usecase.notifications.AcceptContactRequestUseCaseImpl
+import backend.application.usecase.notifications.RejectContactRequestUseCaseImpl   // <--- NUEVO
+
 
 // 3. Chat (¡Estos faltaban!)
 import backend.domain.port.inbound.SendMessageUseCase
@@ -133,6 +136,8 @@ val applicationModule = module {
     single<RequestContactUseCase> { RequestContactUseCaseImpl(get()) }
     // AcceptContact necesita NotificationRepo Y ChatRepo, por eso get(), get()
     single<AcceptContactRequestUseCase> { AcceptContactRequestUseCaseImpl(get(), get()) }
+    single<RejectContactRequestUseCase> { RejectContactRequestUseCaseImpl(get()) } // <--- NUEVO
+
 
     // Chat (¡AGREGADOS!)
     single<SendMessageUseCase> { SendMessageUseCaseImpl(get()) }
@@ -147,7 +152,7 @@ val inboundModule = module {
     single { AdviserHandler(get(), get()) }
 
     // Handler de Notificaciones
-    single { NotificationHandler(get(), get()) }
+    single { NotificationHandler(get(), get(), get()) }
 
     // Handler de Chat (¡AGREGADO!)
     // Necesita: GetChatMessagesQuery, SendMessageUseCase, ChatRepository

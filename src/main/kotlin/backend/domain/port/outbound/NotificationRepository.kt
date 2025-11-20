@@ -1,4 +1,5 @@
 package backend.domain.port.outbound
+
 import backend.domain.model.Notification // <-- ¡Importar el modelo de dominio!
 import backend.domain.model.NotificationDetails
 
@@ -55,5 +56,11 @@ interface NotificationRepository {
     suspend fun findById(notificationId: Long): Result<Notification?>
 
 
+    //Nuevo metodo para guardar el chat_id en la notificacion al aceptar
+    suspend fun markAcceptedWithChat(
+        notificationId: Long,
+        recipientId: Long,
+        chatId: Long
+    ): Result<Boolean>
 
 }

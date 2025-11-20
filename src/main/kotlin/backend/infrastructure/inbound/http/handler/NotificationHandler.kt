@@ -11,10 +11,12 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.http.*
 import io.ktor.server.plugins.* // Para 'BadRequestException'
+import backend.domain.port.inbound.RejectContactRequestUseCase  // <--- NUEVO
 
 class NotificationHandler(
     private val getNotificationsQuery: GetNotificationsQuery,
-    private val acceptContactRequestUseCase: AcceptContactRequestUseCase
+    private val acceptContactRequestUseCase: AcceptContactRequestUseCase,
+    private val rejectContactRequestUseCase: RejectContactRequestUseCase   // <--- NUEVO
 ) {
 
     /**
@@ -60,10 +62,14 @@ class NotificationHandler(
                 call.respond(HttpStatusCode.Conflict, mapOf("error" to e.message))
             }
         } else if (request.status == "declined") {
-            // Lógica para RECHAZAR (¡Necesitaríamos un 'RejectContactRequestUseCase' simple!)
-            // Por ahora, solo respondemos OK
-            // TODO: Implementar 'rejectContactRequestUseCase.reject(notificationId, userId)'
-            call.respond(HttpStatusCode.OK, mapOf("message" to "Solicitud rechazada"))
+            val result = rejectContactRequestUseCase.reject(notificationId, userId)
+
+            result.onSuccess {
+                call.respond(HttpStatusCode.OK, mapOf("message" to "Solicitud rechazada"))
+            }.onFailure { e ->
+                call.respond(HttpStatusCode.Conflict, mapOf("error" to e.message))
+            }
+
         } else {
             throw BadRequestException("El estado debe ser 'accepted' o 'declined'")
         }

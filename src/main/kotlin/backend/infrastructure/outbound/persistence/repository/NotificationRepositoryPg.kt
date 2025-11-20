@@ -118,5 +118,25 @@ class NotificationRepositoryPg : NotificationRepository {
         }
     }
 
+    //Nuevo metodo para guardar el chat_id en la notificacion
+    override suspend fun markAcceptedWithChat(
+        notificationId: Long,
+        recipientId: Long,
+        chatId: Long
+    ): Result<Boolean> = runCatching {
+        tx {
+            val updatedRows = NotificationsTable.update(
+                where = {
+                    (NotificationsTable.id eq notificationId) and
+                            (NotificationsTable.recipientId eq recipientId)
+                }
+            ) {
+                it[this.status] = "accepted"
+                it[this.chatId] = chatId
+            }
+            updatedRows > 0
+        }
+    }
+
 
 }
