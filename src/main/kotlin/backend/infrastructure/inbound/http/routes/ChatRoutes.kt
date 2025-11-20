@@ -5,29 +5,23 @@ import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.routing.*
 import io.ktor.server.websocket.*
-import org.koin.ktor.ext.inject
+// Borra el import de koin (org.koin.ktor.ext.inject)
 
 /**
- * Define las rutas de chat (REST y WebSocket).
- * Delega toda la lógica de manejo al ChatHandler.
+ * AHORA RECIBE EL HANDLER POR PARÁMETRO
+ * Esto evita el error de versión de Koin.
  */
-fun Route.chatRoutes() {
+fun Route.chatRoutes(chatHandler: ChatHandler) { // <--- CAMBIO AQUÍ
 
-    // Inyectamos el Handler (que a su vez tiene inyectados los casos de uso)
-    val chatHandler: ChatHandler by inject()
+    // ELIMINAMOS ESTA LÍNEA QUE CAUSABA EL ERROR:
+    // val chatHandler: ChatHandler by inject()
 
     authenticate("auth-jwt") {
 
-        /**
-         * Endpoint REST para cargar el HISTORIAL de mensajes.
-         */
         get("/chat/{id}/messages") {
             chatHandler.handleGetMessages(call)
         }
 
-        /**
-         * Endpoint WEBSOCKET para la comunicación en TIEMPO REAL.
-         */
         webSocket("/ws/chat/{id}") {
             chatHandler.handleWebSocketConnection(this)
         }

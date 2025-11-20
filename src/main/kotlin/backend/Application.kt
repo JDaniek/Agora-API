@@ -1,10 +1,9 @@
 package backend
 
-// Añade estos imports:
 import backend.infrastructure.inbound.http.routes.configureRouting
 import io.ktor.server.application.*
 import backend.infrastructure.plugins.*
-import backend.infrastructure.plugins.configureDatabases // <-- ¡AÑADE ESTA LÍNEA!
+// (El import de configureDatabases ya está cubierto por el .* de arriba, pero está bien si lo dejas)
 import configureMonitoring
 
 fun main(args: Array<String>): Unit = io.ktor.server.netty.EngineMain.main(args)
@@ -15,12 +14,12 @@ fun Application.module() {
 
     // 2. El resto de plugins
     configureSecurity()
-    configureSerialization() // <-- Ahora se resuelve
-    configureMonitoring()    // <-- Ahora se resuelve
-    configureDatabases()     // <-- Ahora se resuelve
-    configureRouting()       // <-- Ahora se resuelve
+    configureSerialization()
+    configureSockets()       // <--- ¡AÑADE ESTA LÍNEA OBLIGATORIA!
+    configureMonitoring()
+    configureDatabases()
+    configureRouting()
     configureErrorHandling()
 
-    configureCORS() // <-- Aquí instalamos y configuramos CORS
-
+    configureCORS()
 }
