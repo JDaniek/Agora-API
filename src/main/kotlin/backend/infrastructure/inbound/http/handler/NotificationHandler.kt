@@ -2,6 +2,7 @@ package backend.infrastructure.inbound.http.handler
 
 import backend.domain.port.inbound.AcceptContactRequestUseCase
 import backend.domain.port.inbound.GetNotificationsQuery
+import backend.domain.port.inbound.MarkNotificationAsReadUseCase
 import backend.infrastructure.inbound.http.dto.UpdateNotificationStatusRequest
 import backend.infrastructure.inbound.http.dto.NewChatResponse
 import io.ktor.server.application.*
@@ -16,7 +17,8 @@ import backend.domain.port.inbound.RejectContactRequestUseCase  // <--- NUEVO
 class NotificationHandler(
     private val getNotificationsQuery: GetNotificationsQuery,
     private val acceptContactRequestUseCase: AcceptContactRequestUseCase,
-    private val rejectContactRequestUseCase: RejectContactRequestUseCase   // <--- NUEVO
+    private val rejectContactRequestUseCase: RejectContactRequestUseCase,
+    private val markNotificationAsReadUseCase: MarkNotificationAsReadUseCase // <--- NUEVO
 ) {
 
     /**
@@ -28,12 +30,19 @@ class NotificationHandler(
         val userId = principal?.payload?.subject?.toLongOrNull()
             ?: throw IllegalStateException("No se encontró el ID de usuario en el token")
 
-        val result = getNotificationsQuery.getNotifications(userId)
+        // ?status=pending / accepted / declined / read / unread / archived
+        val statusParam = call.request.queryParameters["status"]
+
+        val result = getNotificationsQuery.getNotifications(userId, statusParam)
 
         result.onSuccess { notifications ->
             call.respond(HttpStatusCode.OK, notifications)
         }.onFailure { e ->
-            call.respond(HttpStatusCode.InternalServerError, mapOf("error" to e.message))
+            val statusCode =
+                if (e is IllegalArgumentException) HttpStatusCode.BadRequest
+                else HttpStatusCode.InternalServerError
+
+            call.respond(statusCode, mapOf("error" to (e.message ?: "Error inesperado")))
         }
     }
 
@@ -51,27 +60,40 @@ class NotificationHandler(
 
         val request = call.receive<UpdateNotificationStatusRequest>()
 
-        if (request.status == "accepted") {
-            // Lógica para ACEPTAR
-            val result = acceptContactRequestUseCase.acceptRequest(notificationId, userId)
+        when (request.status) {
+            "accepted" -> {
+                val result = acceptContactRequestUseCase.acceptRequest(notificationId, userId)
 
-            result.onSuccess { newChatId ->
-                call.respond(HttpStatusCode.Created, NewChatResponse(chatId = newChatId))
-            }.onFailure { e ->
-                // Manejar errores de negocio (ej. "ya fue aceptada")
-                call.respond(HttpStatusCode.Conflict, mapOf("error" to e.message))
-            }
-        } else if (request.status == "declined") {
-            val result = rejectContactRequestUseCase.reject(notificationId, userId)
-
-            result.onSuccess {
-                call.respond(HttpStatusCode.OK, mapOf("message" to "Solicitud rechazada"))
-            }.onFailure { e ->
-                call.respond(HttpStatusCode.Conflict, mapOf("error" to e.message))
+                result.onSuccess { newChatId ->
+                    call.respond(HttpStatusCode.Created, NewChatResponse(chatId = newChatId))
+                }.onFailure { e ->
+                    call.respond(HttpStatusCode.Conflict, mapOf("error" to e.message))
+                }
             }
 
-        } else {
-            throw BadRequestException("El estado debe ser 'accepted' o 'declined'")
+            "declined" -> {
+                val result = rejectContactRequestUseCase.reject(notificationId, userId)
+
+                result.onSuccess {
+                    call.respond(HttpStatusCode.OK, mapOf("message" to "Solicitud rechazada"))
+                }.onFailure { e ->
+                    call.respond(HttpStatusCode.Conflict, mapOf("error" to e.message))
+                }
+            }
+
+            "read" -> {
+                val result = markNotificationAsReadUseCase.markAsRead(notificationId, userId)
+
+                result.onSuccess {
+                    call.respond(HttpStatusCode.OK, mapOf("message" to "Notificación marcada como leída"))
+                }.onFailure { e ->
+                    call.respond(HttpStatusCode.Conflict, mapOf("error" to e.message))
+                }
+            }
+
+            else -> {
+                throw BadRequestException("El estado debe ser 'accepted', 'declined' o 'read'")
+            }
         }
     }
 }

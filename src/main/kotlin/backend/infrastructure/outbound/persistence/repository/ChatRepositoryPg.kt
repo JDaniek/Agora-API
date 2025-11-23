@@ -5,9 +5,9 @@ import backend.domain.port.outbound.ChatRepository
 import backend.infrastructure.outbound.persistence.tables.ChatMembersTable
 import backend.infrastructure.outbound.persistence.tables.ChatMessagesTable
 import backend.infrastructure.outbound.persistence.tables.ChatsTable
-
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
+
 import java.time.Instant
 import java.time.ZoneOffset
 
@@ -17,8 +17,7 @@ import java.time.ZoneOffset
 class ChatRepositoryPg : ChatRepository {
 
     // Helper para transacciones suspendidas
-    private suspend fun <T> dbQuery(block: suspend () -> T): T =
-        newSuspendedTransaction { block() }
+    private suspend fun <T> dbQuery(block: suspend () -> T): T = newSuspendedTransaction { block() }
 
     /**
      * CREAR CHAT:
@@ -89,11 +88,8 @@ class ChatRepositoryPg : ChatRepository {
      */
     override suspend fun getChatMessages(chatId: Long): Result<List<ChatMessage>> = dbQuery {
         try {
-            val messages = ChatMessagesTable
-                .selectAll()
-                .where { ChatMessagesTable.chatId eq chatId }
-                .orderBy(ChatMessagesTable.sentAt to SortOrder.ASC)
-                .map(::rowToChatMessage)
+            val messages = ChatMessagesTable.selectAll().where { ChatMessagesTable.chatId eq chatId }
+                .orderBy(ChatMessagesTable.sentAt to SortOrder.ASC).map(::rowToChatMessage)
 
             Result.success(messages)
         } catch (e: Exception) {
@@ -110,10 +106,8 @@ class ChatRepositoryPg : ChatRepository {
         // --- 🕵️ TRAMPA 3: DENTRO DE LA DB ---
         println("🛑 DEBUG REPO: Buscando en tabla ChatMembers... User: $userId, Chat: $chatId")
 
-        val count = ChatMembersTable
-            .selectAll()
-            .where { (ChatMembersTable.userId eq userId) and (ChatMembersTable.chatId eq chatId) }
-            .count()
+        val count = ChatMembersTable.selectAll()
+            .where { (ChatMembersTable.userId eq userId) and (ChatMembersTable.chatId eq chatId) }.count()
 
         println("🛑 DEBUG REPO: Se encontraron $count filas coincidentes.")
 
@@ -131,4 +125,35 @@ class ChatRepositoryPg : ChatRepository {
             sentAt = row[ChatMessagesTable.sentAt].toInstant()
         )
     }
+
+    // Nuevo método para evitar duplicidad de chats
+    override suspend fun findPrivateChatBetweenUsers(
+        userOneId: Long,
+        userTwoId: Long
+    ): Result<Long?> = dbQuery {
+        try {
+            // 1. Todos los chats donde está el usuario 1
+            val userOneChats = ChatMembersTable
+                .selectAll()
+                .where { ChatMembersTable.userId eq userOneId }
+                .map { row -> row[ChatMembersTable.chatId] }
+                .toSet()
+
+            // 2. Todos los chats donde está el usuario 2
+            val userTwoChats = ChatMembersTable
+                .selectAll()
+                .where { ChatMembersTable.userId eq userTwoId }
+                .map { row -> row[ChatMembersTable.chatId] }
+                .toSet()
+
+            // 3. Intersección: chats donde están ambos
+            val commonChatId = userOneChats.intersect(userTwoChats).firstOrNull()
+
+            Result.success(commonChatId)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+
 }

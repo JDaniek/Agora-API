@@ -1,36 +1,25 @@
 package backend.infrastructure.outbound.persistence.repository
 
+import backend.domain.model.Notification
 import backend.domain.model.NotificationDetails
-import backend.domain.model.Notification // <-- ¡Importar!
 import backend.domain.port.outbound.NotificationRepository
-// (¡Ya no necesitamos 'backend.infrastructure.plugins.dbQuery'!)
 import backend.infrastructure.outbound.persistence.tables.NotificationsTable
 import backend.infrastructure.outbound.persistence.tables.NotificationTypesTable
 import backend.infrastructure.outbound.persistence.tables.ProfilesTable
 import backend.infrastructure.outbound.persistence.tables.UserAccountsTable
-import org.jetbrains.exposed.sql.*
-// --- IMPORTS AÑADIDOS PARA EL HELPER 'tx' ---
 import kotlinx.coroutines.Dispatchers
+import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 
-/**
- * Implementación de 'NotificationRepository' usando PostgreSQL y Exposed.
- */
 class NotificationRepositoryPg : NotificationRepository {
 
-    // --- HELPER DE TRANSACCIÓN (copiado de tu ProfileRepositoryPg) ---
     private suspend fun <T> tx(block: suspend () -> T): T =
         newSuspendedTransaction(Dispatchers.IO) { block() }
 
-    // --- Aliases para los JOINs ---
     private val Sender = UserAccountsTable.alias("sender")
     private val SenderProfile = ProfilesTable.alias("sender_profile")
 
-    /**
-     * Crea una solicitud de contacto (INSERT)
-     */
     override suspend fun createContactRequest(senderId: Long, recipientId: Long): Result<Long> = runCatching {
-        // Usamos 'tx' en lugar de 'dbQuery'
         tx {
             NotificationsTable.insert {
                 it[this.senderId] = senderId
@@ -42,27 +31,49 @@ class NotificationRepositoryPg : NotificationRepository {
     }
 
     /**
-     * Obtiene la lista de notificaciones para la campana (SELECT + JOINs)
+     * Con filtro opcional por status.
      */
-    override suspend fun findNotificationsForUser(userId: Long): Result<List<NotificationDetails>> = runCatching {
+    override suspend fun findNotificationsForUser(
+        userId: Long,
+        statusFilter: List<String>?
+    ): Result<List<NotificationDetails>> = runCatching {
         tx {
-            NotificationsTable
+            val baseQuery = NotificationsTable
                 .join(
                     NotificationTypesTable,
                     JoinType.INNER,
                     NotificationsTable.notificationTypeId,
                     NotificationTypesTable.id
                 )
-                .join(Sender, JoinType.INNER, NotificationsTable.senderId, Sender[UserAccountsTable.id])
-                .join(SenderProfile, JoinType.LEFT, NotificationsTable.senderId, SenderProfile[ProfilesTable.userId])
+                .join(
+                    Sender,
+                    JoinType.INNER,
+                    NotificationsTable.senderId,
+                    Sender[UserAccountsTable.id]
+                )
+                .join(
+                    SenderProfile,
+                    JoinType.LEFT,
+                    NotificationsTable.senderId,
+                    SenderProfile[ProfilesTable.userId]
+                )
                 .selectAll()
                 .where { NotificationsTable.recipientId eq userId }
+
+            val finalQuery = if (!statusFilter.isNullOrEmpty()) {
+                baseQuery.andWhere { NotificationsTable.status inList statusFilter }
+            } else {
+                baseQuery
+            }
+
+            finalQuery
                 .orderBy(NotificationsTable.createdAt, SortOrder.DESC)
                 .map { row ->
                     NotificationDetails(
                         notificationId = row[NotificationsTable.id],
                         status = row[NotificationsTable.status],
-                        createdAt = row[NotificationsTable.createdAt].toInstant(),
+                        // 👇 OffsetDateTime -> Instant -> String ISO
+                        createdAt = row[NotificationsTable.createdAt].toInstant().toString(),
                         notificationTypeName = row[NotificationTypesTable.name],
                         senderFirstName = row[Sender[UserAccountsTable.firstName]],
                         senderLastName = row[Sender[UserAccountsTable.lastName]],
@@ -72,42 +83,36 @@ class NotificationRepositoryPg : NotificationRepository {
         }
     }
 
-    /**
-     * Actualiza el estado de una notificación (UPDATE)
-     */
-    override suspend fun updateStatus(notificationId: Long, newStatus: String, recipientId: Long): Result<Boolean> =
-        runCatching {
-            tx {
-                val updatedRows = NotificationsTable.update(
-                    where = {
-                        (NotificationsTable.id eq notificationId) and (NotificationsTable.recipientId eq recipientId)
-                    }
-                ) {
-                    it[this.status] = newStatus
+    override suspend fun updateStatus(
+        notificationId: Long,
+        newStatus: String,
+        recipientId: Long
+    ): Result<Boolean> = runCatching {
+        tx {
+            val updatedRows = NotificationsTable.update(
+                where = {
+                    (NotificationsTable.id eq notificationId) and
+                            (NotificationsTable.recipientId eq recipientId)
                 }
-                updatedRows > 0
+            ) {
+                it[this.status] = newStatus
             }
+            updatedRows > 0
         }
+    }
 
-    /**
-     * (NUEVA IMPLEMENTACIÓN)
-     * Mapea una fila de la BD al modelo de dominio 'Notification'.
-     */
-    private fun ResultRow.toNotification(): Notification = Notification(
-        id = this[NotificationsTable.id],
-        recipientId = this[NotificationsTable.recipientId],
-        senderId = this[NotificationsTable.senderId],
-        notificationTypeId = this[NotificationsTable.notificationTypeId],
-        status = this[NotificationsTable.status],
-        createdAt = this[NotificationsTable.createdAt].toInstant(),
-        message = this[NotificationsTable.message],
-        chatId = this[NotificationsTable.chatId]
-    )
+    private fun ResultRow.toNotification(): Notification =
+        Notification(
+            id = this[NotificationsTable.id],
+            recipientId = this[NotificationsTable.recipientId],
+            senderId = this[NotificationsTable.senderId],
+            notificationTypeId = this[NotificationsTable.notificationTypeId],
+            status = this[NotificationsTable.status],
+            createdAt = this[NotificationsTable.createdAt].toInstant(),
+            message = this[NotificationsTable.message],
+            chatId = this[NotificationsTable.chatId]
+        )
 
-    /**
-     * (NUEVA IMPLEMENTACIÓN)
-     * Busca una notificación por su ID.
-     */
     override suspend fun findById(notificationId: Long): Result<Notification?> = runCatching {
         tx {
             NotificationsTable
@@ -118,7 +123,6 @@ class NotificationRepositoryPg : NotificationRepository {
         }
     }
 
-    //Nuevo metodo para guardar el chat_id en la notificacion
     override suspend fun markAcceptedWithChat(
         notificationId: Long,
         recipientId: Long,
@@ -137,6 +141,4 @@ class NotificationRepositoryPg : NotificationRepository {
             updatedRows > 0
         }
     }
-
-
 }

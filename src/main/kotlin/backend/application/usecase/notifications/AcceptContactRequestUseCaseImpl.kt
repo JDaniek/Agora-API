@@ -4,49 +4,56 @@ import backend.domain.port.inbound.AcceptContactRequestUseCase
 import backend.domain.port.outbound.ChatRepository
 import backend.domain.port.outbound.NotificationRepository
 
-/**
- * Implementación del caso de uso [AcceptContactRequestUseCase].
- * Depende de AMBOS repositorios para orquestar la lógica.
- */
 class AcceptContactRequestUseCaseImpl(
     private val notificationRepository: NotificationRepository,
     private val chatRepository: ChatRepository
 ) : AcceptContactRequestUseCase {
 
     override suspend fun acceptRequest(notificationId: Long, acceptorUserId: Long): Result<Long> {
-        // 1. Buscar la notificación para obtener los IDs y validarla
-        val notificationResult = notificationRepository.findById(notificationId)
-        val notification = notificationResult.getOrNull()
+        // 1. Buscar la notificación
+        val notification = notificationRepository.findById(notificationId)
+            .getOrElse { return Result.failure(it) }
             ?: return Result.failure(Exception("Notificación no encontrada"))
 
         // 2. Validaciones de negocio
         if (notification.recipientId != acceptorUserId) {
             return Result.failure(Exception("No autorizado. Esta notificación no es tuya."))
         }
+
         if (notification.status != "pending") {
             return Result.failure(Exception("Esta solicitud ya fue ${notification.status}."))
         }
 
-        // 3. Lógica principal (¡ambos pasos deben tener éxito!)
         return try {
-            // Paso A: Crear el chat
-            val newChatId = chatRepository.createPrivateChat(
-                userOneId = notification.senderId,
-                userTwoId = notification.recipientId
-            ).getOrThrow() // Si esto falla, el 'catch' lo captura
+            // 3. Buscar si ya existe un chat entre estos 2 usuarios
+            val existingChatId = chatRepository
+                .findPrivateChatBetweenUsers(notification.senderId, notification.recipientId)
+                .getOrThrow()
 
-            // Paso B: Actualizar la notificación a "accepted"
-            notificationRepository.updateStatus(
+            val chatId = if (existingChatId != null) {
+                existingChatId
+            } else {
+                chatRepository.createPrivateChat(
+                    userOneId = notification.senderId,
+                    userTwoId = notification.recipientId
+                ).getOrThrow()
+            }
+
+            // 4. Marcar la notificación como aceptada y asociar el chat
+            val updated = notificationRepository.markAcceptedWithChat(
                 notificationId = notificationId,
-                newStatus = "accepted",
-                recipientId = acceptorUserId
-            ).getOrThrow() // Si esto falla, el 'catch' lo captura (idealmente, se haría un rollback)
+                recipientId = acceptorUserId,
+                chatId = chatId
+            ).getOrThrow()
 
-            // 4. Éxito: devolver el ID del nuevo chat
-            Result.success(newChatId)
+            if (!updated) {
+                throw IllegalStateException("No se pudo actualizar la notificación como aceptada.")
+            }
+
+            // 5. Devolver el ID del chat (ya sea nuevo o existente)
+            Result.success(chatId)
 
         } catch (e: Exception) {
-            // Si CUALQUIERA de los pasos falla, devolvemos el error
             Result.failure(Exception("Error al aceptar la solicitud: ${e.message}"))
         }
     }

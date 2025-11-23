@@ -29,6 +29,22 @@ import backend.infrastructure.outbound.persistence.repository.ProfileRepositoryP
 import backend.infrastructure.outbound.persistence.repository.SpecialtyRepositoryPg
 import backend.infrastructure.outbound.persistence.repository.NotificationRepositoryPg // Nuevo
 import backend.infrastructure.outbound.persistence.repository.ChatRepositoryPg         // Nuevo
+// Repositorio de clases
+import backend.domain.port.inbound.UpdateClassUseCase
+import backend.application.usecase.classes.UpdateClassUseCaseImpl
+import backend.domain.port.outbound.ClassRepository
+import backend.infrastructure.outbound.persistence.repository.ClassRepositoryPg
+import backend.domain.port.inbound.EnrollStudentInClassUseCase
+import backend.application.usecase.classes.EnrollStudentInClassUseCaseImpl
+// Casos de uso de clases
+import backend.domain.port.inbound.GetClassEnrollmentsQuery
+import backend.application.usecase.classes.GetClassEnrollmentsQueryImpl
+
+// Caso de uso
+import backend.domain.port.inbound.CreateClassUseCase
+import backend.application.usecase.classes.CreateClassUseCaseImpl
+// Handler
+import backend.infrastructure.inbound.http.handler.ClassHandler
 
 // --- IMPORTS: Casos de Uso (Application -> Domain) ---
 // 1. Usuarios y Perfil
@@ -44,6 +60,8 @@ import backend.application.usecase.users.GetProfileQueryImpl
 import backend.application.usecase.users.SearchAdvisersQueryImpl
 
 // 2. Notificaciones
+import backend.domain.port.inbound.MarkNotificationAsReadUseCase
+import backend.application.usecase.notifications.MarkNotificationAsReadUseCaseImpl
 import backend.domain.port.inbound.GetNotificationsQuery
 import backend.domain.port.inbound.RequestContactUseCase
 import backend.domain.port.inbound.RejectContactRequestUseCase   // <--- NUEVO
@@ -59,6 +77,10 @@ import backend.domain.port.inbound.SendMessageUseCase
 import backend.domain.port.inbound.GetChatMessagesQuery
 import backend.application.usecase.chat.SendMessageUseCaseImpl
 import backend.application.usecase.chat.ListMessagesQueryImpl
+import backend.application.usecase.classes.DeleteClassUseCaseImpl
+import backend.application.usecase.classes.GetStudentEnrolledClassesQueryImpl
+import backend.domain.port.inbound.DeleteClassUseCase
+import backend.domain.port.inbound.GetStudentEnrolledClassesQuery
 
 // --- IMPORTS: Handlers (Infraestructura Inbound) ---
 import backend.infrastructure.inbound.http.handler.AuthHandler
@@ -108,6 +130,9 @@ val configModule = module {
 }
 
 val infrastructureModule = module {
+    //Clases
+    single<ClassRepository> { ClassRepositoryPg() }   // <--- NUEVO
+
     // Servicios Base
     single<PasswordService> { PasswordServiceImpl() }
     single { JwtService(get()) }
@@ -124,6 +149,14 @@ val infrastructureModule = module {
 }
 
 val applicationModule = module {
+    //Clases
+    single<CreateClassUseCase> { CreateClassUseCaseImpl(get()) }
+    single<UpdateClassUseCase> { UpdateClassUseCaseImpl(get()) }
+    single<EnrollStudentInClassUseCase> { EnrollStudentInClassUseCaseImpl(get()) }
+    single<GetClassEnrollmentsQuery> { GetClassEnrollmentsQueryImpl(get()) }
+    single<GetStudentEnrolledClassesQuery> { GetStudentEnrolledClassesQueryImpl(get()) }   // 🔥
+    single<DeleteClassUseCase> { DeleteClassUseCaseImpl(get()) }
+
     // Usuarios
     single<RegisterUserUseCase> { RegisterUserUseCaseImpl(get(), get()) }
     single<LoginUseCase> { LoginUseCaseImpl(get(), get(), get()) }
@@ -134,9 +167,9 @@ val applicationModule = module {
     // Notificaciones
     single<GetNotificationsQuery> { GetNotificationsQueryImpl(get()) }
     single<RequestContactUseCase> { RequestContactUseCaseImpl(get()) }
-    // AcceptContact necesita NotificationRepo Y ChatRepo, por eso get(), get()
     single<AcceptContactRequestUseCase> { AcceptContactRequestUseCaseImpl(get(), get()) }
-    single<RejectContactRequestUseCase> { RejectContactRequestUseCaseImpl(get()) } // <--- NUEVO
+    single<RejectContactRequestUseCase> { RejectContactRequestUseCaseImpl(get()) }
+    single<MarkNotificationAsReadUseCase> { MarkNotificationAsReadUseCaseImpl(get()) }
 
 
     // Chat (¡AGREGADOS!)
@@ -145,6 +178,18 @@ val applicationModule = module {
 }
 
 val inboundModule = module {
+    //Clases
+    single {
+        ClassHandler(
+            get(), // CreateClassUseCase
+            get(), // ClassRepository
+            get(), // UpdateClassUseCase
+            get(), // EnrollStudentInClassUseCase
+            get(), // GetClassEnrollmentsQuery
+            get(), // GetStudentEnrolledClassesQuery
+            get()  // DeleteClassUseCase
+        )
+    }
     // Handlers existentes
     single { AuthHandler(get(), get(), get()) }
     single { ProfileHandler(get(), get()) }
@@ -152,7 +197,7 @@ val inboundModule = module {
     single { AdviserHandler(get(), get()) }
 
     // Handler de Notificaciones
-    single { NotificationHandler(get(), get(), get()) }
+    single { NotificationHandler(get(), get(), get(), get()) }
 
     // Handler de Chat (¡AGREGADO!)
     // Necesita: GetChatMessagesQuery, SendMessageUseCase, ChatRepository
@@ -165,10 +210,7 @@ fun Application.configureDependencyInjection() {
         slf4jLogger()
         modules(
             module { single { this@configureDependencyInjection } }, // Inyectar Application
-            configModule,
-            infrastructureModule,
-            applicationModule,
-            inboundModule
+            configModule, infrastructureModule, applicationModule, inboundModule
         )
     }
 }

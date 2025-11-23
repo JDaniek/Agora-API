@@ -10,5 +10,8 @@ interface GetNotificationsQuery {
      * @param userId El ID del usuario autenticado (el que mira la campana).
      * @return Result con la lista de [NotificationDetails].
      */
-    suspend fun getNotifications(userId: Long): Result<List<NotificationDetails>>
+    suspend fun getNotifications(
+        userId: Long,
+        status: String? = null
+    ): Result<List<NotificationDetails>>
 }

@@ -1,6 +1,7 @@
 package backend.domain.model
 
 import java.time.Instant
+import kotlinx.serialization.Serializable
 
 /**
  * Representa la fila de la base de datos 'notifications'.
@@ -20,13 +21,16 @@ data class Notification(
 /**
  * Representa el "Read Model" para el endpoint de la campana (la lista de notificaciones).
  * Es el resultado del JOIN con las tablas de usuarios y perfiles.
+ *
+ * NOTA: aquí usamos tipos amigables para JSON.
  */
+@Serializable
 data class NotificationDetails(
     val notificationId: Long,
     val status: String,
-    val createdAt: Instant,
-    val notificationTypeName: String, // ej. "contact_request"
-    val senderFirstName: String,      // ej. "Ashwin"
-    val senderLastName: String,       // ej. "Bose"
-    val senderPhotoUrl: String?       // ej. "http://..."
+    val createdAt: String,          // ← String ISO, no Instant
+    val notificationTypeName: String,
+    val senderFirstName: String,
+    val senderLastName: String,
+    val senderPhotoUrl: String?
 )
