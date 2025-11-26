@@ -71,5 +71,10 @@ interface ClassRepository {
     //Nuevo: Eliminar clase (con verificacion de tutor)
     suspend fun deleteClassByIdAndTutor(classId: Long, tutorId: Long): Boolean
 
-
+    //Nuevo: En esste metodo metemos la "tarea" para revisar si ya paso el dia de la clase y si el alumno estuvo inscrito en una clase confirmada con ese asesor
+    suspend fun hasStudentCompletedClassWithTeacher(
+        studentId: Long,
+        teacherId: Long,
+        untilDate: LocalDate
+    ): Boolean
 }

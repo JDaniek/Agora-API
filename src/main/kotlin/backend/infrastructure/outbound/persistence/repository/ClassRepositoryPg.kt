@@ -215,4 +215,31 @@ class ClassRepositoryPg : ClassRepository {
         } > 0
     }
 
+    /*Nuevo: Con este caso ya se verifica el planteamiento de si el alumno ya estuvo en al menos una clase confirmada
+    con este asesor en una fecha anterior o igual a hoy
+     */
+    override suspend fun hasStudentCompletedClassWithTeacher(
+        studentId: Long,
+        teacherId: Long,
+        untilDate: LocalDate
+    ): Boolean = tx {
+        ClassEnrollmentsTable
+            .join(
+                ClassesTable,
+                JoinType.INNER,
+                onColumn = ClassEnrollmentsTable.classId,
+                otherColumn = ClassesTable.id
+            )
+            .selectAll()
+            .where {
+                (ClassEnrollmentsTable.studentId eq studentId) and
+                        (ClassesTable.tutorId eq teacherId) and
+                        (ClassesTable.classDate lessEq untilDate) and
+                        (ClassEnrollmentsTable.status eq "confirmed")
+            }
+            .limit(1)
+            .any()
+    }
+
+
 }

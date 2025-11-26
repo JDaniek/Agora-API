@@ -405,6 +405,44 @@ CREATE TABLE IF NOT EXISTS reviews
 (
 )
     );
+-- =========================================================
+-- STUDENT_REVIEWS (Calificaciones de alumnos por asesores)
+-- =========================================================
+CREATE TABLE IF NOT EXISTS student_reviews
+(
+    id
+    BIGSERIAL
+    PRIMARY
+    KEY,
+    student_id
+    BIGINT
+    NOT
+    NULL
+    REFERENCES
+    user_accounts
+(
+    id
+),
+    teacher_id BIGINT NOT NULL REFERENCES user_accounts
+(
+    id
+),
+    rating INT NOT NULL CHECK
+(
+    rating
+    BETWEEN
+    1
+    AND
+    5
+),
+    comment TEXT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now
+(
+)
+    );
+
+CREATE INDEX IF NOT EXISTS idx_student_reviews_student_id ON student_reviews (student_id);
+CREATE INDEX IF NOT EXISTS idx_student_reviews_teacher_id ON student_reviews (teacher_id);
 
 -- =========================================================
 -- NOTIFICATIONS

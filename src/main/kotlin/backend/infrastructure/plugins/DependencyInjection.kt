@@ -72,16 +72,34 @@ import backend.application.usecase.notifications.AcceptContactRequestUseCaseImpl
 import backend.application.usecase.notifications.RejectContactRequestUseCaseImpl   // <--- NUEVO
 
 
-// 3. Chat (¡Estos faltaban!)
+// 3. Chat
 import backend.domain.port.inbound.SendMessageUseCase
 import backend.domain.port.inbound.GetChatMessagesQuery
 import backend.application.usecase.chat.SendMessageUseCaseImpl
 import backend.application.usecase.chat.ListMessagesQueryImpl
 import backend.application.usecase.classes.DeleteClassUseCaseImpl
 import backend.application.usecase.classes.GetStudentEnrolledClassesQueryImpl
+import backend.application.usecase.reviews.CreateStudentReviewUseCaseImpl
 import backend.domain.port.inbound.DeleteClassUseCase
 import backend.domain.port.inbound.GetStudentEnrolledClassesQuery
 
+//4.Reviews
+import backend.domain.port.outbound.ReviewRepository
+import backend.infrastructure.outbound.persistence.repository.ReviewRepositoryPg
+import backend.domain.port.inbound.CreateTeacherReviewUseCase
+import backend.domain.port.inbound.GetTeacherReviewsQuery
+import backend.application.usecase.reviews.CreateTeacherReviewUseCaseImpl
+import backend.application.usecase.reviews.GetStudentReviewSummaryQueryImpl
+import backend.application.usecase.reviews.GetStudentReviewsForStudentQueryImpl
+import backend.application.usecase.reviews.GetTeacherReviewsQueryImpl
+import backend.infrastructure.inbound.http.handler.ReviewHandler
+import backend.domain.port.inbound.GetTeacherReviewSummaryQuery
+import backend.application.usecase.reviews.GetTeacherReviewSummaryQueryImpl
+import backend.domain.port.inbound.CreateStudentReviewUseCase
+import backend.domain.port.inbound.GetStudentReviewsForStudentQuery
+import backend.domain.port.outbound.StudentReviewRepository
+import backend.infrastructure.outbound.persistence.repository.StudentReviewRepositoryPg
+import backend.domain.port.inbound.GetStudentReviewSummaryQuery
 // --- IMPORTS: Handlers (Infraestructura Inbound) ---
 import backend.infrastructure.inbound.http.handler.AuthHandler
 import backend.infrastructure.inbound.http.handler.ProfileHandler
@@ -146,6 +164,12 @@ val infrastructureModule = module {
     // Repositorios Nuevos (Notificaciones y Chat)
     single<NotificationRepository> { NotificationRepositoryPg() }
     single<ChatRepository> { ChatRepositoryPg() }
+
+    //Repositorio reviews
+    single<ReviewRepository> { ReviewRepositoryPg() }
+    //Repositorio reviews alumno
+    single<StudentReviewRepository> { StudentReviewRepositoryPg() }
+
 }
 
 val applicationModule = module {
@@ -175,6 +199,17 @@ val applicationModule = module {
     // Chat (¡AGREGADOS!)
     single<SendMessageUseCase> { SendMessageUseCaseImpl(get()) }
     single<GetChatMessagesQuery> { ListMessagesQueryImpl(get()) }
+
+    // Reviews profesor (teacher-side)
+    single<GetTeacherReviewSummaryQuery> { GetTeacherReviewSummaryQueryImpl(get()) }
+    single<GetTeacherReviewsQuery> { GetTeacherReviewsQueryImpl(get()) }
+    single<CreateTeacherReviewUseCase> { CreateTeacherReviewUseCaseImpl(get(), get()) }
+
+    // Reviews alumno (student-side)
+    single<CreateStudentReviewUseCase> { CreateStudentReviewUseCaseImpl(get(), get()) }
+    single<GetStudentReviewsForStudentQuery> { GetStudentReviewsForStudentQueryImpl(get()) }
+    single<GetStudentReviewSummaryQuery> { GetStudentReviewSummaryQueryImpl(get()) }
+
 }
 
 val inboundModule = module {
@@ -202,6 +237,17 @@ val inboundModule = module {
     // Handler de Chat (¡AGREGADO!)
     // Necesita: GetChatMessagesQuery, SendMessageUseCase, ChatRepository
     single { ChatHandler(get(), get(), get()) }
+    //Reviews
+    single {
+        ReviewHandler(
+            createTeacherReviewUseCase = get(),
+            getTeacherReviewsQuery = get(),
+            getTeacherReviewSummaryQuery = get(),
+            createStudentReviewUseCase = get(),
+            getStudentReviewsForStudentQuery = get(),
+            getStudentReviewSummaryQuery = get()
+        )
+    }
 }
 
 // --- Función Principal de Instalación ---

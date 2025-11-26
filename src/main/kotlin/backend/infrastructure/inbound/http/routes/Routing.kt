@@ -7,6 +7,7 @@ import backend.infrastructure.inbound.http.handler.AdviserHandler
 import backend.infrastructure.inbound.http.handler.NotificationHandler
 import backend.infrastructure.inbound.http.handler.ChatHandler // <--- IMPORTA EL CHAT HANDLER
 import backend.infrastructure.inbound.http.handler.ClassHandler
+import backend.infrastructure.inbound.http.handler.ReviewHandler
 import io.ktor.server.application.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
@@ -26,11 +27,8 @@ fun Application.configureRouting() {
     val adviserHandler by inject<AdviserHandler>()
     val notificationHandler by inject<NotificationHandler>()
     val classHandler: ClassHandler by inject()
-
-    // --- INYECTAMOS EL CHAT HANDLER AQUÍ ---
     val chatHandler by inject<ChatHandler>()
-    // ---------------------------------------
-
+    val reviewHandler by inject<ReviewHandler>()
     routing {
         get("/") {
             call.respondText("Welcome to Agora API!")
@@ -43,10 +41,8 @@ fun Application.configureRouting() {
             adviserRouting(adviserHandler)
             notificationRouting(notificationHandler)
             classRoutes(classHandler)
-
-            // --- SE LO PASAMOS COMO PARÁMETRO ---
             chatRoutes(chatHandler)
-            // ------------------------------------
+            reviewRoutes(reviewHandler)
         }
     }
 }
