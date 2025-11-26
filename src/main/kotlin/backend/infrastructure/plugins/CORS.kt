@@ -8,7 +8,7 @@ import io.ktor.server.plugins.cors.routing.*
 fun Application.configureCORS() {
     install(CORS) {
         // 1. Permite peticiones desde tu frontend Angular
-        allowHost("localhost:4200")
+        allowHost("localhost:4200", schemes = listOf("http"))
 
         // 2. Métodos HTTP que permites desde el frontend
         allowMethod(HttpMethod.Options) // ¡Crítico para el "preflight"!
@@ -16,7 +16,7 @@ fun Application.configureCORS() {
         allowMethod(HttpMethod.Get)
         allowMethod(HttpMethod.Put)
         allowMethod(HttpMethod.Delete)
-
+        allowMethod(HttpMethod.Patch)
         // 3. Cabeceras (headers) que permites que el frontend envíe
         allowHeader(HttpHeaders.ContentType)     // Para que Angular pueda enviar JSON
         allowHeader(HttpHeaders.Authorization) // Para que pueda enviar el Token JWT
