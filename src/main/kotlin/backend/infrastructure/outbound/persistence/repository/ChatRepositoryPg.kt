@@ -2,12 +2,18 @@ package backend.infrastructure.outbound.persistence.repository
 
 import backend.domain.model.ChatMessage
 import backend.domain.port.outbound.ChatRepository
+import backend.infrastructure.inbound.http.dto.chat.MyChatResponse
 import backend.infrastructure.outbound.persistence.tables.ChatMembersTable
 import backend.infrastructure.outbound.persistence.tables.ChatMessagesTable
 import backend.infrastructure.outbound.persistence.tables.ChatsTable
+import backend.infrastructure.outbound.persistence.tables.ProfilesTable
+import backend.infrastructure.outbound.persistence.tables.UserAccountsTable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
-
+import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.transactions.transaction
+import backend.infrastructure.outbound.persistence.tables.*
 import java.time.Instant
 import java.time.ZoneOffset
 
@@ -155,5 +161,56 @@ class ChatRepositoryPg : ChatRepository {
         }
     }
 
+    override suspend fun getChatsForUser(userId: Long): Result<List<MyChatResponse>> = runCatching {
+        transaction {
+            // 1. Obtener los IDs de chats donde estoy
+            // CAMBIO: .selectAll().where { ... }
+            val myChatIds = ChatMembersTable
+                .selectAll()
+                .where { ChatMembersTable.userId eq userId }
+                .map { it[ChatMembersTable.chatId] }
+
+            if (myChatIds.isEmpty()) return@transaction emptyList()
+
+            // 2. Buscar al "otro participante" de esos chats
+            // CAMBIO: .selectAll().where { ... }
+            (ChatMembersTable innerJoin UserAccountsTable leftJoin ProfilesTable)
+                .selectAll()
+                .where {
+                    (ChatMembersTable.chatId inList myChatIds) and
+                            (ChatMembersTable.userId neq userId)
+                }
+                .map { row ->
+                    val chatId = row[ChatMembersTable.chatId]
+                    val otherId = row[UserAccountsTable.id]
+
+                    val firstName = row[UserAccountsTable.firstName]
+                    val lastName = row[UserAccountsTable.lastName]
+                    val photo = row[ProfilesTable.photoUrl]
+
+                    // 3. Buscar último mensaje
+                    // CAMBIO: .selectAll().where { ... }
+                    val lastMsgRow = ChatMessagesTable
+                        .selectAll()
+                        .where { ChatMessagesTable.chatId eq chatId }
+                        .orderBy(ChatMessagesTable.sentAt to SortOrder.DESC)
+                        .limit(1)
+                        .singleOrNull()
+
+                    val lastMsg = lastMsgRow?.get(ChatMessagesTable.body)
+                    val lastTime = lastMsgRow?.get(ChatMessagesTable.sentAt)?.toString()
+
+                    MyChatResponse(
+                        chatId = chatId,
+                        otherParticipantId = otherId,
+                        otherParticipantName = "$firstName $lastName".trim(),
+                        otherParticipantPhoto = photo,
+                        lastMessage = lastMsg,
+                        lastMessageTime = lastTime,
+                        unreadCount = 0
+                    )
+                }
+        }
+    }
 
 }

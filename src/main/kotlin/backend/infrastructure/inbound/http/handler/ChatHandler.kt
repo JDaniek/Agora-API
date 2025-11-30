@@ -46,7 +46,8 @@ class ChatHandler(
                 call.respond(messages.map { it.toWsMessageOut() })
             },
             onFailure = { error ->
-                val statusCode = if (error is SecurityException) HttpStatusCode.Forbidden else HttpStatusCode.InternalServerError
+                val statusCode =
+                    if (error is SecurityException) HttpStatusCode.Forbidden else HttpStatusCode.InternalServerError
                 call.respond(statusCode, error.message ?: "Error")
             }
         )
@@ -130,4 +131,28 @@ class ChatHandler(
             ChatConnectionManager.leave(chatId, session)
         }
     }
+
+
+    /**
+     * GET /api/v1/chats/mine
+     */
+    suspend fun handleGetMyChats(call: ApplicationCall) {
+        val principal = call.principal<JWTPrincipal>()
+        val userId = principal?.payload?.subject?.toLongOrNull()
+
+        if (userId == null) {
+            call.respond(HttpStatusCode.Unauthorized, "Token inválido")
+            return
+        }
+
+        val result = chatRepository.getChatsForUser(userId)
+
+        result.onSuccess { chats ->
+            call.respond(HttpStatusCode.OK, chats)
+        }.onFailure { e ->
+            call.respond(HttpStatusCode.InternalServerError, mapOf("error" to e.message))
+        }
+    }
+
+
 }

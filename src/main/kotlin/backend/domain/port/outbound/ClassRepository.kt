@@ -77,4 +77,7 @@ interface ClassRepository {
         teacherId: Long,
         untilDate: LocalDate
     ): Boolean
+
+
+
 }

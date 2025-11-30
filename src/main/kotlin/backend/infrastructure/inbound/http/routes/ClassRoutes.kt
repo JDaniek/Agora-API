@@ -6,7 +6,13 @@ import io.ktor.server.auth.*
 import io.ktor.server.routing.*
 
 fun Route.classRoutes(handler: ClassHandler) {
-
+// --- ZONA PÚBLICA (Sin Token) ---
+    route("/classes") {
+        // Nuevo endpoint público
+        get("/teachers/{tutorId}") {
+            handler.getClassesByTutor(call)
+        }
+    }
     authenticate("auth-jwt") {
         route("/classes") {
 

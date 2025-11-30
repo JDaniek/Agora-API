@@ -287,4 +287,27 @@ class ClassHandler(
         }
     }
 
+    /**
+     * GET /api/v1/classes/teachers/{tutorId}
+     * Endpoint PÚBLICO para listar clases disponibles de un profesor.
+     */
+    suspend fun getClassesByTutor(call: ApplicationCall) {
+        val tutorId = call.parameters["tutorId"]?.toLongOrNull()
+
+        if (tutorId == null) {
+            call.respond(HttpStatusCode.BadRequest, "El ID del profesor es inválido")
+            return
+        }
+
+        // 1. Reutilizamos el método que ya tienes en el repositorio
+        val allClasses = classRepository.findByTutor(tutorId)
+
+        // 2. Filtramos: Solo mostramos las clases ACTIVAS al público
+        // (Opcional: también podrías filtrar por fecha para no mostrar clases pasadas)
+        val activeClasses = allClasses.filter {
+            it.isActive == true // Asumiendo que ClassSession tiene este campo
+        }
+
+        call.respond(HttpStatusCode.OK, activeClasses.map { it.toResponse() })
+    }
 }

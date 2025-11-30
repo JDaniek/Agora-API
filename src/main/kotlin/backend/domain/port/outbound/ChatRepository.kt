@@ -1,6 +1,7 @@
 package backend.domain.port.outbound
 
 import backend.domain.model.ChatMessage
+import backend.infrastructure.inbound.http.dto.chat.MyChatResponse
 
 interface ChatRepository {
 
@@ -17,4 +18,7 @@ interface ChatRepository {
      * @return Result con el ID del chat si existe, o null si no existe.
      */
     suspend fun findPrivateChatBetweenUsers(userOneId: Long, userTwoId: Long): Result<Long?>
+
+
+    suspend fun getChatsForUser(userId: Long): Result<List<MyChatResponse>>
 }

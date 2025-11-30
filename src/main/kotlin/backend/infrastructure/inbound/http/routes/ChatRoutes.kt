@@ -5,6 +5,7 @@ import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.routing.*
 import io.ktor.server.websocket.*
+
 // Borra el import de koin (org.koin.ktor.ext.inject)
 
 /**
@@ -25,5 +26,11 @@ fun Route.chatRoutes(chatHandler: ChatHandler) { // <--- CAMBIO AQUÍ
         webSocket("/ws/chat/{id}") {
             chatHandler.handleWebSocketConnection(this)
         }
+// NUEVA RUTA
+        get("/chats/mine") {
+            chatHandler.handleGetMyChats(call)
+        }
     }
+
+
 }
