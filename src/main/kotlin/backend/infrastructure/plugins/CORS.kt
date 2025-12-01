@@ -4,25 +4,25 @@ import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.plugins.cors.routing.*
 
-// Esta es la función que llamaremos desde Application.kt
 fun Application.configureCORS() {
     install(CORS) {
-        // 1. Permite peticiones desde tu frontend Angular
-        allowHost("localhost:4200", schemes = listOf("http"))
+        // 🚨 CAMBIO IMPORTANTE: Permitir cualquier origen (Frontend en S3, Localhost, Celular, etc.)
+        anyHost()
 
-        // 2. Métodos HTTP que permites desde el frontend
-        allowMethod(HttpMethod.Options) // ¡Crítico para el "preflight"!
+        // 2. Métodos HTTP permitidos
+        allowMethod(HttpMethod.Options)
         allowMethod(HttpMethod.Post)
         allowMethod(HttpMethod.Get)
         allowMethod(HttpMethod.Put)
         allowMethod(HttpMethod.Delete)
         allowMethod(HttpMethod.Patch)
-        // 3. Cabeceras (headers) que permites que el frontend envíe
-        allowHeader(HttpHeaders.ContentType)     // Para que Angular pueda enviar JSON
-        allowHeader(HttpHeaders.Authorization) // Para que pueda enviar el Token JWT
 
-        // Opcional: si necesitas que el frontend lea otras cabeceras,
-        // puedes exponerlas aquí, pero no es necesario para el login.
-        // exposeHeader("X-Mi-Header-Custom")
+        // 3. Cabeceras permitidas
+        allowHeader(HttpHeaders.ContentType)
+        allowHeader(HttpHeaders.Authorization) // Indispensable para el Token JWT
+
+        // Permite que el navegador envíe credenciales/cookies si fuera necesario (opcional)
+        allowCredentials = true
+        allowNonSimpleContentTypes = true
     }
 }

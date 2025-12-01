@@ -107,6 +107,11 @@ import backend.infrastructure.inbound.http.handler.MediaHandler
 import backend.infrastructure.inbound.http.handler.AdviserHandler
 import backend.infrastructure.inbound.http.handler.NotificationHandler
 import backend.infrastructure.inbound.http.handler.ChatHandler // Nuevo
+//Imports TeacherFavorite
+import backend.domain.port.outbound.TeacherFavoritesRepository
+import backend.infrastructure.outbound.persistence.repository.TeacherFavoritesRepositoryPg
+import backend.infrastructure.inbound.http.handler.TeacherFavoritesHandler
+
 
 // --- Helpers de Configuración ---
 private fun ApplicationConfig.prop(path: String) = propertyOrNull(path)?.getString()
@@ -169,6 +174,8 @@ val infrastructureModule = module {
     single<ReviewRepository> { ReviewRepositoryPg() }
     //Repositorio reviews alumno
     single<StudentReviewRepository> { StudentReviewRepositoryPg() }
+    //Repositorio TeacherFavorite
+    single<TeacherFavoritesRepository> { TeacherFavoritesRepositoryPg() }
 
 }
 
@@ -210,6 +217,7 @@ val applicationModule = module {
     single<GetStudentReviewsForStudentQuery> { GetStudentReviewsForStudentQueryImpl(get()) }
     single<GetStudentReviewSummaryQuery> { GetStudentReviewSummaryQueryImpl(get()) }
 
+
 }
 
 val inboundModule = module {
@@ -248,6 +256,8 @@ val inboundModule = module {
             getStudentReviewSummaryQuery = get()
         )
     }
+    //TeacherFavorite
+    single { TeacherFavoritesHandler(get()) }
 }
 
 // --- Función Principal de Instalación ---

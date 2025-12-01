@@ -5,13 +5,15 @@ import backend.infrastructure.inbound.http.handler.MediaHandler
 import backend.infrastructure.inbound.http.handler.ProfileHandler
 import backend.infrastructure.inbound.http.handler.AdviserHandler
 import backend.infrastructure.inbound.http.handler.NotificationHandler
-import backend.infrastructure.inbound.http.handler.ChatHandler // <--- IMPORTA EL CHAT HANDLER
+import backend.infrastructure.inbound.http.handler.ChatHandler
 import backend.infrastructure.inbound.http.handler.ClassHandler
 import backend.infrastructure.inbound.http.handler.ReviewHandler
+import backend.infrastructure.inbound.http.handler.TeacherFavoritesHandler
 import io.ktor.server.application.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import org.koin.ktor.ext.inject
+
 
 fun Route.authRouting(handler: AuthHandler) {
     route("/auth") {
@@ -26,9 +28,11 @@ fun Application.configureRouting() {
     val mediaHandler by inject<MediaHandler>()
     val adviserHandler by inject<AdviserHandler>()
     val notificationHandler by inject<NotificationHandler>()
-    val classHandler: ClassHandler by inject()
+    val classHandler by inject<ClassHandler>()
     val chatHandler by inject<ChatHandler>()
     val reviewHandler by inject<ReviewHandler>()
+    val teacherFavoritesHandler by inject<TeacherFavoritesHandler>()
+
     routing {
         get("/") {
             call.respondText("Welcome to Agora API!")
@@ -43,6 +47,7 @@ fun Application.configureRouting() {
             classRoutes(classHandler)
             chatRoutes(chatHandler)
             reviewRoutes(reviewHandler)
+            teacherFavoritesRoutes(teacherFavoritesHandler)
         }
     }
 }

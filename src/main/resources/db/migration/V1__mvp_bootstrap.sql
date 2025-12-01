@@ -28,7 +28,8 @@ CREATE TABLE IF NOT EXISTS roles
     'student',
     'professor',
     'admin'
-))
+)
+    )
     );
 
 INSERT INTO roles (name)
@@ -405,6 +406,7 @@ CREATE TABLE IF NOT EXISTS reviews
 (
 )
     );
+
 -- =========================================================
 -- STUDENT_REVIEWS (Calificaciones de alumnos por asesores)
 -- =========================================================
@@ -443,6 +445,41 @@ CREATE TABLE IF NOT EXISTS student_reviews
 
 CREATE INDEX IF NOT EXISTS idx_student_reviews_student_id ON student_reviews (student_id);
 CREATE INDEX IF NOT EXISTS idx_student_reviews_teacher_id ON student_reviews (teacher_id);
+
+-- =========================================================
+-- TEACHER_FAVORITES (Profesores favoritos por alumno)
+-- =========================================================
+CREATE TABLE IF NOT EXISTS teacher_favorites
+(
+    student_id
+    BIGINT
+    NOT
+    NULL
+    REFERENCES
+    user_accounts
+(
+    id
+) ON DELETE CASCADE,
+    teacher_id BIGINT NOT NULL REFERENCES user_accounts
+(
+    id
+)
+  ON DELETE CASCADE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now
+(
+),
+    PRIMARY KEY
+(
+    student_id,
+    teacher_id
+)
+    );
+
+CREATE INDEX IF NOT EXISTS idx_teacher_favorites_student
+    ON teacher_favorites (student_id);
+
+CREATE INDEX IF NOT EXISTS idx_teacher_favorites_teacher
+    ON teacher_favorites (teacher_id);
 
 -- =========================================================
 -- NOTIFICATIONS
@@ -536,3 +573,5 @@ COMMENT
 ON TABLE media IS 'Almacena URLs de archivos subidos (ej. fotos de perfil)';
 COMMENT
 ON TABLE reviews IS 'Calificaciones y comentarios de estudiantes a profesores.';
+COMMENT
+ON TABLE teacher_favorites IS 'Relación de profesores favoritos marcados por estudiantes.';
