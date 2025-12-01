@@ -7,6 +7,7 @@ data class ClassEnrollmentDetails(
     val firstName: String,
     val lastName: String,
     val email: String,
+    val photoUrl: String?,
     val status: String,
     val enrolledAt: Instant
 )

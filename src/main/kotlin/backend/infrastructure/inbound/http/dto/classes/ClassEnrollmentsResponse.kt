@@ -7,6 +7,7 @@ data class ClassEnrollmentResponse(
     val studentId: Long,
     val fullName: String,
     val email: String,
+    val photoUrl: String?,
     val status: String,
     val enrolledAt: String
 )

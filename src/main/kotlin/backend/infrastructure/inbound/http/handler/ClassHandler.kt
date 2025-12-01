@@ -2,6 +2,7 @@ package backend.infrastructure.inbound.http.handler
 
 import backend.domain.port.inbound.*
 import backend.domain.port.outbound.ClassRepository
+import backend.infrastructure.inbound.http.dto.classes.ClassEnrollmentResponse
 import backend.infrastructure.inbound.http.dto.classes.CreateClassRequest
 import backend.infrastructure.inbound.http.dto.classes.EnrollStudentRequest
 import backend.infrastructure.inbound.http.dto.classes.UpdateClassRequest
@@ -193,9 +194,10 @@ class ClassHandler(
 
     /**
      * GET /api/v1/classes/{id}/enrollments
-     * Lista los alumnos inscritos en una clase del tutor autenticado.
+     * Lista los alumnos con nombre y foto (y valida que seas el profesor).
      */
     suspend fun getClassEnrollments(call: ApplicationCall) {
+        // 1. Obtener ID del usuario autenticado (Tutor)
         val principal = call.principal<JWTPrincipal>()
         val tutorId = principal?.payload?.subject?.toLongOrNull()
 
@@ -204,24 +206,42 @@ class ClassHandler(
             return
         }
 
+        // 2. Obtener ID de la clase
         val classId = call.parameters["id"]?.toLongOrNull()
         if (classId == null) {
             call.respond(HttpStatusCode.BadRequest, "El ID de la clase debe ser numérico")
             return
         }
 
-        val result = getClassEnrollmentsQuery.getEnrollments(tutorId, classId)
+        // 3. SEGURIDAD: Verificar que la clase exista y pertenezca al tutor
+        val classSession = classRepository.findById(classId)
 
-        result.onSuccess { list ->
-            call.respond(list.map { it.toResponse() })
-        }.onFailure { e ->
-            val status = when (e) {
-                is NoSuchElementException -> HttpStatusCode.NotFound
-                is SecurityException -> HttpStatusCode.Forbidden
-                else -> HttpStatusCode.InternalServerError
-            }
-            call.respond(status, mapOf("error" to (e.message ?: "Error al obtener inscripciones")))
+        if (classSession == null) {
+            call.respond(HttpStatusCode.NotFound, "La clase no existe")
+            return
         }
+
+        if (classSession.tutorId != tutorId) {
+
+            call.respond(HttpStatusCode.Forbidden, mapOf("error" to "No tienes permiso para ver esta clase"))
+            return
+        }
+
+        val enrollments = classRepository.findEnrollmentDetailsForClass(classId)
+
+        // 5. Mapear al DTO de respuesta
+        val response = enrollments.map { details ->
+            ClassEnrollmentResponse(
+                studentId = details.studentId,
+                fullName = "${details.firstName} ${details.lastName}".trim(),
+                email = details.email,
+                photoUrl = details.photoUrl,
+                status = details.status,
+                enrolledAt = details.enrolledAt.toString()
+            )
+        }
+
+        call.respond(HttpStatusCode.OK, response)
     }
 
     /**

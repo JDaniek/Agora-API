@@ -28,6 +28,8 @@ fun ClassEnrollmentDetails.toResponse(): ClassEnrollmentResponse =
         studentId = studentId,
         fullName = "$firstName $lastName".trim(),
         email = email,
+        photoUrl = photoUrl,
+
         status = status,
         enrolledAt = enrolledAt.toString() // Instant → ISO-8601
     )

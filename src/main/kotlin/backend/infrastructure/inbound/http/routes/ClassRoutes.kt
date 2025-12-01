@@ -34,7 +34,7 @@ fun Route.classRoutes(handler: ClassHandler) {
             post("/{id}/enrollments") {
                 handler.enrollStudent(call)
             }
-            // POST listar alumnos de una clase
+            // GET listar alumnos de una clase
             get("/{id}/enrollments") {
                 handler.getClassEnrollments(call)
             }

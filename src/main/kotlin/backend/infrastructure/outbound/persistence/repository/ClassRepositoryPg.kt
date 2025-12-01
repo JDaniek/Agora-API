@@ -12,6 +12,7 @@ import backend.domain.model.ClassEnrollmentDetails
 import backend.infrastructure.outbound.persistence.tables.ClassEnrollmentsTable
 import backend.infrastructure.outbound.persistence.tables.UserAccountsTable
 import backend.domain.model.ClassEnrollmentForStudent
+import backend.infrastructure.outbound.persistence.tables.ProfilesTable
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import java.time.Instant
 
@@ -144,26 +145,36 @@ class ClassRepositoryPg : ClassRepository {
             .orderBy(ClassEnrollmentsTable.createdAt to SortOrder.ASC).map { it.toClassEnrollment() }
     }
 
-    // 👇 NUEVO: join con UserAccountsTable para sacar nombre y correo
     override suspend fun findEnrollmentDetailsForClass(
         classId: Long
     ): List<ClassEnrollmentDetails> = tx {
-        ClassEnrollmentsTable
-            .join(
-                UserAccountsTable,
-                JoinType.INNER,
-                onColumn = ClassEnrollmentsTable.studentId,  //unir por student_id
-                otherColumn = UserAccountsTable.id
-            )
+
+        // 1. JOIN EXPLÍCITO para resolver la ambigüedad
+        ClassEnrollmentsTable.join(
+            UserAccountsTable,
+            JoinType.INNER,
+            onColumn = ClassEnrollmentsTable.studentId,
+            otherColumn = UserAccountsTable.id
+        ).join(
+            ProfilesTable,
+            JoinType.LEFT,
+            onColumn = UserAccountsTable.id,
+            otherColumn = ProfilesTable.userId
+        )
             .selectAll()
             .where { ClassEnrollmentsTable.classId eq classId }
             .orderBy(ClassEnrollmentsTable.createdAt to SortOrder.ASC)
             .map { row ->
+                val firstName = row[UserAccountsTable.firstName]
+                val lastName = row[UserAccountsTable.lastName]
+                val fullName = "$firstName $lastName".trim()
+
                 ClassEnrollmentDetails(
                     studentId = row[ClassEnrollmentsTable.studentId],
                     firstName = row[UserAccountsTable.firstName],
                     lastName = row[UserAccountsTable.lastName],
                     email = row[UserAccountsTable.email],
+                    photoUrl = row[ProfilesTable.photoUrl], // Foto del perfil
                     status = row[ClassEnrollmentsTable.status],
                     enrolledAt = row[ClassEnrollmentsTable.createdAt].toInstant()
                 )
