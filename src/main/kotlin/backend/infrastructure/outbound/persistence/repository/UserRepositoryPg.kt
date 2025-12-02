@@ -33,8 +33,6 @@ class UserRepositoryPg : UserRepository {
 
     override suspend fun save(user: UserAccount): UserAccount = newSuspendedTransaction {
         val insertedId = UserAccountsTable.insert {
-            // El compilador ya no fallará aquí, porque
-            // user.roleId (Long) coincide con UserAccountsTable.roleId (long)
             it[firstName] = user.firstName
             it[secondName] = user.secondName
             it[lastName] = user.lastName

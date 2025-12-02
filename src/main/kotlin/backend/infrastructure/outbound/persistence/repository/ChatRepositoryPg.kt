@@ -109,13 +109,13 @@ class ChatRepositoryPg : ChatRepository {
      * INCLUYE LOGS DE DEPURACIÓN.
      */
     override suspend fun isUserMemberOfChat(userId: Long, chatId: Long): Boolean = dbQuery {
-        // --- 🕵️ TRAMPA 3: DENTRO DE LA DB ---
-        println("🛑 DEBUG REPO: Buscando en tabla ChatMembers... User: $userId, Chat: $chatId")
+        //TRAMPA 3: DENTRO DE LA DB
+        println(" DEBUG REPO: Buscando en tabla ChatMembers... User: $userId, Chat: $chatId")
 
         val count = ChatMembersTable.selectAll()
             .where { (ChatMembersTable.userId eq userId) and (ChatMembersTable.chatId eq chatId) }.count()
 
-        println("🛑 DEBUG REPO: Se encontraron $count filas coincidentes.")
+        println("DEBUG REPO: Se encontraron $count filas coincidentes.")
 
         count > 0
     }
@@ -132,7 +132,7 @@ class ChatRepositoryPg : ChatRepository {
         )
     }
 
-    // Nuevo método para evitar duplicidad de chats
+    // Nuevo metodo para evitar duplicidad de chats
     override suspend fun findPrivateChatBetweenUsers(
         userOneId: Long,
         userTwoId: Long
@@ -164,7 +164,6 @@ class ChatRepositoryPg : ChatRepository {
     override suspend fun getChatsForUser(userId: Long): Result<List<MyChatResponse>> = runCatching {
         transaction {
             // 1. Obtener los IDs de chats donde estoy
-            // CAMBIO: .selectAll().where { ... }
             val myChatIds = ChatMembersTable
                 .selectAll()
                 .where { ChatMembersTable.userId eq userId }
@@ -173,7 +172,6 @@ class ChatRepositoryPg : ChatRepository {
             if (myChatIds.isEmpty()) return@transaction emptyList()
 
             // 2. Buscar al "otro participante" de esos chats
-            // CAMBIO: .selectAll().where { ... }
             (ChatMembersTable innerJoin UserAccountsTable leftJoin ProfilesTable)
                 .selectAll()
                 .where {
@@ -189,7 +187,6 @@ class ChatRepositoryPg : ChatRepository {
                     val photo = row[ProfilesTable.photoUrl]
 
                     // 3. Buscar último mensaje
-                    // CAMBIO: .selectAll().where { ... }
                     val lastMsgRow = ChatMessagesTable
                         .selectAll()
                         .where { ChatMessagesTable.chatId eq chatId }

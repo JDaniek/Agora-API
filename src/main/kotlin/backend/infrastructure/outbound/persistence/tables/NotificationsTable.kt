@@ -9,8 +9,6 @@ object NotificationsTable : Table("notifications") {
     // ID principal, cambiado a long() para coincidir con BIGSERIAL
     val id = long("id").autoIncrement()
 
-    // --- Columnas de la nueva lógica ---
-
     // El usuario que RECIBE la notificación (antes 'userId')
     val recipientId = long("recipient_id").references(UserAccountsTable.id, onDelete = ReferenceOption.CASCADE)
 
@@ -19,11 +17,10 @@ object NotificationsTable : Table("notifications") {
 
     // El estado de la notificación (pending, read, accepted, declined)
     val status = varchar("status", 20).default("pending")
+
     // Usamos CurrentTimestampWithTimeZone (tipo OffsetDateTime) para que coincida
     // con la columna timestampWithTimeZone.
     val createdAt = timestampWithTimeZone("created_at").defaultExpression(CurrentTimestampWithTimeZone)
-
-    // --- Columnas originales ---
 
     // Mensaje opcional (para notificaciones genéricas)
     val message = text("message").nullable()

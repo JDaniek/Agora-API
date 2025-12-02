@@ -1,6 +1,5 @@
 package backend.domain.model
 
-// Basado en tu tabla 'ProfilesTable' y el formulario
 data class Profile(
     val userId: Long,
     val description: String?,

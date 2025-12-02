@@ -32,12 +32,6 @@ class UpdateClassUseCaseImpl(
         }
 
         command.classDate?.let { date ->
-            // Si quieres evitar fechas pasadas, descomenta:
-            // if (date.isBefore(LocalDate.now())) {
-            //     return Result.failure(
-            //         IllegalArgumentException("La fecha de la clase no puede ser en el pasado")
-            //     )
-            // }
         }
 
         // 2. Verificar que la clase exista y sea del tutor

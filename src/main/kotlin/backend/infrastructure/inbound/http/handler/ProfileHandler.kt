@@ -12,7 +12,6 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.http.*
 
-// ¡¡CORRECCIÓN AQUÍ!! El constructor ahora recibe DOS casos de uso
 class ProfileHandler(
     private val updateProfileUseCase: UpdateProfileUseCase, private val getProfileQuery: GetProfileQuery
 ) {
@@ -41,7 +40,6 @@ class ProfileHandler(
             // 1. Ejecuta el guardado (Actualiza la BD)
             updateProfileUseCase.execute(command)
 
-            // --- ¡¡ARREGLO!! ---
             // 2. Después de guardar, vuelve a consultar los datos completos
             val profileDetails = getProfileQuery.execute(userId)
 

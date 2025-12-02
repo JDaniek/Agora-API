@@ -21,7 +21,6 @@ class MediaHandler(
     suspend fun handleFileUpload(call: ApplicationCall) { /* ... */ }
 
     suspend fun handleUploadAndAttach(call: ApplicationCall) {
-        // --- AÑADIMOS UN BLOQUE try/catch ---
         try {
             val principal = call.principal<JWTPrincipal>()
                 ?: return call.respond(HttpStatusCode.Unauthorized, "No autorizado")

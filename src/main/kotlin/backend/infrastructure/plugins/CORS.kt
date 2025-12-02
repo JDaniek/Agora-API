@@ -6,7 +6,6 @@ import io.ktor.server.plugins.cors.routing.*
 
 fun Application.configureCORS() {
     install(CORS) {
-        // 🚨 CAMBIO IMPORTANTE: Permitir cualquier origen (Frontend en S3, Localhost, Celular, etc.)
         anyHost()
 
         // 2. Métodos HTTP permitidos

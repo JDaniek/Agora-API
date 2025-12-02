@@ -9,7 +9,6 @@ import io.ktor.http.auth.* //IMPORTANTE: Necesario para HttpAuthHeader y parseAu
 import org.koin.ktor.ext.inject
 
 fun Application.configureSecurity() {
-    // Inyecta los servicios que Koin ya creó en 'configureDependencyInjection'
     val jwtService by inject<JwtService>()
     val cfg by inject<JwtConfig>()
 
@@ -21,7 +20,7 @@ fun Application.configureSecurity() {
             // LÓGICA PARA LEER TOKEN DE LA URL (WEBSOCKETS)
             authHeader { call ->
                 // 1. Primero intentamos leer el Header estándar (Authorization: Bearer ...)
-                // Esto es lo que usan tus rutas normales (REST)
+                // Esto es lo que usan las rutas normales (REST)
                 val authHeader = call.request.parseAuthorizationHeader()
                 if (authHeader != null) {
                     return@authHeader authHeader
@@ -31,14 +30,12 @@ fun Application.configureSecurity() {
                 // Esto es lo que usaremos para el WebSocket
                 val token = call.request.queryParameters["token"]
                 if (token != null) {
-                    // "Engañamos" a Ktor empaquetando el token como si fuera un Bearer header
                     return@authHeader HttpAuthHeader.Single("Bearer", token)
                 }
 
                 // 3. Si no hay ni header ni param, retornamos null (Ktor lanzará 401)
                 null
             }
-            //
 
             validate { credential ->
                 // Leemos el ID desde el campo 'subject' (sub) del token

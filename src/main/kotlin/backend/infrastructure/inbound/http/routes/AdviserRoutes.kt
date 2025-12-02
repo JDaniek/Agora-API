@@ -5,7 +5,6 @@ import io.ktor.server.application.*
 import io.ktor.server.routing.*
 import io.ktor.server.auth.*
 
-// --- CORREGIDO: Volvemos a 'adviserRouting' y pasamos el handler ---
 fun Route.adviserRouting(handler: AdviserHandler) {
 
     authenticate("auth-jwt") {

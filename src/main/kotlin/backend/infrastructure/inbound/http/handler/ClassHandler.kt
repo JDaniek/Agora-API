@@ -319,13 +319,11 @@ class ClassHandler(
             return
         }
 
-        // 1. Reutilizamos el método que ya tienes en el repositorio
         val allClasses = classRepository.findByTutor(tutorId)
 
         // 2. Filtramos: Solo mostramos las clases ACTIVAS al público
-        // (Opcional: también podrías filtrar por fecha para no mostrar clases pasadas)
         val activeClasses = allClasses.filter {
-            it.isActive == true // Asumiendo que ClassSession tiene este campo
+            it.isActive == true
         }
 
         call.respond(HttpStatusCode.OK, activeClasses.map { it.toResponse() })

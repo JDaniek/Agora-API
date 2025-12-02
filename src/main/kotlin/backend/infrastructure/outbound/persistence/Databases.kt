@@ -29,7 +29,6 @@ fun Application.configureDatabases() {
     // 3. Conecta Exposed a la misma base de datos
     val database = Database.connect(dbUrl, user = dbUser, password = dbPassword)
 
-    // ... (Tu código de SchemaUtils comentado) ...
 }
 
 

@@ -167,6 +167,4 @@ class ProfileRepositoryPg : ProfileRepository {
         }
     }
 
-    // CORRECCIÓN 6: Eliminamos todas las clases 'CustomFunction' rotas.
-    // Ya no son necesarias.
 }

@@ -104,7 +104,7 @@ class StudentReviewRepositoryPg : StudentReviewRepository {
                 StudentReviewSummary(
                     studentId = row[StudentReviewsTable.studentId],
                     averageRating = row[avgRating]?.toDouble() ?: 0.0,
-                    // 👇 el count() es Long, lo convertimos a Int
+                    //el count() es Long, lo convertimos a Int
                     totalReviews = row[total].toInt()
                 )
             }

@@ -42,7 +42,6 @@ class ClassRepositoryPg : ClassRepository {
             it[this.classDate] = classDate
             it[this.capacityPerSlot] = capacityPerSlot.toShort()
             it[this.specialtyId] = specialtyId
-            // isActive y created_at usan defaults de la BD
         } get ClassesTable.id
 
         ClassesTable.selectAll().where { ClassesTable.id eq newId }.single().toClassSession()

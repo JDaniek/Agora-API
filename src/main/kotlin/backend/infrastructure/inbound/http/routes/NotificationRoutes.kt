@@ -5,7 +5,6 @@ import io.ktor.server.application.*
 import io.ktor.server.routing.*
 import io.ktor.server.auth.*
 
-// Sigue tu patrón: recibe el handler como parámetro
 fun Route.notificationRouting(handler: NotificationHandler) {
 
     authenticate("auth-jwt") {

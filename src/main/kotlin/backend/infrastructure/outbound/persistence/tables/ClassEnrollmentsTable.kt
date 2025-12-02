@@ -29,7 +29,7 @@ object ClassEnrollmentsTable : Table("class_enrollments") {
     val createdAt = timestampWithTimeZone("created_at")
         .defaultExpression(CurrentTimestampWithTimeZone)
 
-    // 🔥 PRIMARY KEY alineada con la BD real (class_id, student_id)
+    //PRIMARY KEY alineada con la BD real (class_id, student_id)
     override val primaryKey = PrimaryKey(classId, studentId)
 }
 

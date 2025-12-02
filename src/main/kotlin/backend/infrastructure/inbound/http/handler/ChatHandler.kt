@@ -61,7 +61,7 @@ class ChatHandler(
         val principal = session.call.principal<JWTPrincipal>()
         val userId = principal?.payload?.subject?.toLongOrNull()
 
-        // --- 🕵️ TRAMPA 1: ¿QUIÉN TOCA LA PUERTA? ---
+        //TRAMPA 1: ¿QUIÉN TOCA LA PUERTA? ---
         println("🛑 DEBUG HANDLER: === Intento de conexión ===")
         println("🛑 DEBUG HANDLER: Chat ID recibido: '$chatId'")
         println("🛑 DEBUG HANDLER: User ID del Token: '$userId'")
@@ -73,7 +73,7 @@ class ChatHandler(
             return
         }
 
-        // --- 🕵️ TRAMPA 2: PREGUNTANDO A LA DB ---
+        // TRAMPA 2: PREGUNTANDO A LA DB ---
         println("🛑 DEBUG HANDLER: Consultando repositorio isUserMemberOfChat...")
 
         val isMember = try {
@@ -93,7 +93,7 @@ class ChatHandler(
             return
         }
 
-        // --- 🕵️ TRAMPA 3: ÉXITO ---
+        // TRAMPA 3: ÉXITO ---
         println("🛑 DEBUG HANDLER: Acceso concedido. Uniendo al ConnectionManager...")
 
         // 3. Unirse a la Sala

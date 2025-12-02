@@ -15,7 +15,6 @@ object ChatMessagesTable : Table("chat_messages") {
     // --- CORREGIDO: Estandarizado a 'timestamptz' ---
     val sentAt = timestampWithTimeZone("sent_at")
         .defaultExpression(CurrentTimestampWithTimeZone)
-    // ----------------------------------------------
 
     override val primaryKey = PrimaryKey(messageId)
 }
