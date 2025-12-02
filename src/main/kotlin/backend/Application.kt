@@ -15,7 +15,7 @@ fun Application.module() {
     // 2. El resto de plugins
     configureSecurity()
     configureSerialization()
-    configureSockets()       // <--- ¡AÑADE ESTA LÍNEA OBLIGATORIA!
+    configureSockets()
     configureMonitoring()
     configureDatabases()
     configureRouting()
