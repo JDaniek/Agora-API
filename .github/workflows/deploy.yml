@@ -1,0 +1,64 @@
+name: Deploy Backend Agora
+
+on:
+  push:
+    branches: [ "main" ] # Se activa automáticamente al hacer push a main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Descargar el código del repositorio
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # 2. Instalar Java 21 (El mismo que usa tu servidor)
+      - name: Set up JDK 21
+        uses: actions/setup-java@v3
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      # 3. Dar permisos de ejecución al gradlew
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      # 4. Compilar el Proyecto (Crear el JAR)
+      - name: Build with Gradle
+        run: ./gradlew buildFatJar
+
+      # 5. Subir el JAR al servidor (Usando SCP)
+      - name: Copy JAR to AWS
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
+          source: "build/libs/agora-api-all.jar"
+          target: "/tmp" # Lo subimos a temporal primero
+          strip_components: 2 # Quita las carpetas 'build/libs' para dejar solo el archivo
+
+      # 6. Conectarse por SSH y desplegar
+      - name: Execute Remote Deploy Commands
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
+          script: |
+            echo ">>> [GITHUB] Iniciando despliegue..."
+            
+            # 1. Mover el archivo a la carpeta final (sobreescribiendo)
+            sudo mv /tmp/agora-api-all.jar /opt/apps/backend/app.jar
+            
+            # 2. Asegurar permisos para git_deploy (Como pide la guía)
+            sudo chown git_deploy:deployers /opt/apps/backend/app.jar
+            sudo chmod 770 /opt/apps/backend/app.jar
+            
+            # 3. Reiniciar el servicio usando el script 'post-deploy.sh'
+            # (Ejecutamos como git_deploy para probar permisos)
+            echo ">>> [GITHUB] Reiniciando servicio..."
+            sudo su - git_deploy -c "/home/git_deploy/post-deploy.sh"
+            
+            echo ">>> [GITHUB] Despliegue completado con éxito."
