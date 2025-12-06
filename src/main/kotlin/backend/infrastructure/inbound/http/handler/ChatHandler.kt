@@ -18,7 +18,7 @@ import kotlinx.serialization.json.Json
 
 /**
  * Maneja toda la lógica de negocio para las rutas de Chat (REST y WebSocket).
- * Recibe los casos de uso por inyección de dependencias (Koin).
+ * Recibe los casos de uso por inyección de dependencias (Koin)
  */
 class ChatHandler(
     private val listMessagesQuery: GetChatMessagesQuery,
