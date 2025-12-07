@@ -2,7 +2,7 @@ name: Deploy Backend Agora
 
 on:
   push:
-    branches: [ "main" ] # Se activa automáticamente al hacer push a main
+    branches: [ "jesel" ] # Se activa automáticamente al hacer push a main
 
 jobs:
   deploy:
