@@ -11,5 +11,5 @@ data class AdviserCard(
     val photoUrl: String?,
     val level: String?,
     val description: String?,
-    val specialties: List<String> // Lista de nombres, ej: ["Idiomas", "Artes"]
+    val specialties: List<String>
 )
