@@ -11,5 +11,5 @@ data class AdviserCard(
     val photoUrl: String?,
     val level: String?,
     val description: String?,
-    val specialties: List<String> //prueba n4
+    val specialties: List<String> //prueba n6
 )
