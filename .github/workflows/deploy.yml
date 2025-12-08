@@ -36,45 +36,46 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
           source: "build/libs/agora-api-all.jar"
-          target: "/tmp" # Lo subimos a temporal primero
-          strip_components: 2 # Quita las carpetas 'build/libs' para dejar solo el archivo
+          target: "/tmp"
+          strip_components: 2
+
+      # 6. Conectarse por SSH y desplegar (MODO ESTRICTO)
+      # Fíjate que ahora está alineado con los pasos anteriores
+      - name: Execute Remote Deploy Commands
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
+          script: |
+            echo ">>> [GITHUB] Iniciando despliegue ESTRICTO (Stop -> Replace -> Start)..."
             
-            # 6. Conectarse por SSH y desplegar (MODO ESTRICTO)
-                              - name: Execute Remote Deploy Commands
-                              uses: appleboy/ssh-action@master
-                              with:
-                                host: ${{ secrets.EC2_HOST }}
-                                username: ${{ secrets.EC2_USER }}
-                                key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
-                                script: |
-                                  echo ">>> [GITHUB] Iniciando despliegue ESTRICTO (Stop -> Replace -> Start)..."
-                                  
-                                  # 1. DETENER el servicio totalmente
-                                  echo ">>> [GITHUB] Deteniendo el servicio..."
-                                  sudo systemctl stop myapp.service
-                                  
-                                  # 2. BORRAR el archivo viejo para asegurar limpieza
-                                  echo ">>> [GITHUB] Eliminando JAR anterior..."
-                                  sudo rm -f /opt/apps/backend/app.jar
-                                  
-                                  # 3. MOVER el archivo nuevo a su lugar
-                                  echo ">>> [GITHUB] Colocando nuevo JAR..."
-                                  sudo mv /tmp/agora-api-all.jar /opt/apps/backend/app.jar
-                                  
-                                  # 4. Restaurar permisos (Siempre es bueno hacerlo)
-                                  sudo chown git_deploy:deployers /opt/apps/backend/app.jar
-                                  sudo chmod 770 /opt/apps/backend/app.jar
-                                  
-                                  # 5. INICIAR el servicio limpiamente
-                                  echo ">>> [GITHUB] Iniciando el servicio..."
-                                  sudo systemctl start myapp.service
-                                  
-                                  # 6. Verificación final
-                                  echo ">>> [GITHUB] Verificando salud del sistema..."
-                                  sleep 5
-                                  if systemctl is-active --quiet myapp.service; then
-                                      echo ">>> [EXITO] El sistema arrancó correctamente con el nuevo código."
-                                  else
-                                      echo ">>> [ERROR] El servicio no arrancó. Revisa los logs."
-                                      exit 1
-                                  fi
+            # 1. DETENER el servicio totalmente
+            echo ">>> [GITHUB] Deteniendo el servicio..."
+            sudo systemctl stop myapp.service
+            
+            # 2. BORRAR el archivo viejo para asegurar limpieza
+            echo ">>> [GITHUB] Eliminando JAR anterior..."
+            sudo rm -f /opt/apps/backend/app.jar
+            
+            # 3. MOVER el archivo nuevo a su lugar
+            echo ">>> [GITHUB] Colocando nuevo JAR..."
+            sudo mv /tmp/agora-api-all.jar /opt/apps/backend/app.jar
+            
+            # 4. Restaurar permisos (Siempre es bueno hacerlo)
+            sudo chown git_deploy:deployers /opt/apps/backend/app.jar
+            sudo chmod 770 /opt/apps/backend/app.jar
+            
+            # 5. INICIAR el servicio limpiamente
+            echo ">>> [GITHUB] Iniciando el servicio..."
+            sudo systemctl start myapp.service
+            
+            # 6. Verificación final
+            echo ">>> [GITHUB] Verificando salud del sistema..."
+            sleep 5
+            if systemctl is-active --quiet myapp.service; then
+                echo ">>> [EXITO] El sistema arrancó correctamente con el nuevo código."
+            else
+                echo ">>> [ERROR] El servicio no arrancó. Revisa los logs."
+                exit 1
+            fi
